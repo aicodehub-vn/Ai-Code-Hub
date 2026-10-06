@@ -1,5 +1,6 @@
 // ======================================================
 // AI CODE HUB - MAIN JAVASCRIPT
+// SUPABASE VERSION
 // ======================================================
 
 
@@ -72,6 +73,37 @@ let currentUser = null;
 
 
 // ======================================================
+// CHỐNG CHÈN HTML
+// ======================================================
+
+function escapeHTML(value) {
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        String(value ?? "");
+
+    return div.innerHTML;
+}
+
+
+// ======================================================
+// TẠO TAG
+// ======================================================
+
+function createTag(language) {
+
+    return String(language || "code")
+        .toLowerCase()
+        .replaceAll(" ", "")
+        .replaceAll("/", "")
+        .replaceAll("#", "sharp")
+        .replaceAll("+", "plus");
+}
+
+
+// ======================================================
 // HIỂN THỊ TRẠNG THÁI ĐĂNG NHẬP
 // ======================================================
 
@@ -84,23 +116,26 @@ function updateAuthUI(user) {
 
     if (!user) {
 
-        loginButton.style.display = "inline-flex";
+        loginButton.style.display =
+            "inline-flex";
 
-        userArea.style.display = "none";
+        userArea.style.display =
+            "none";
 
         userButton.textContent =
             "👤 Tài khoản";
 
         return;
-
     }
 
 
     // ===== ĐÃ ĐĂNG NHẬP =====
 
-    loginButton.style.display = "none";
+    loginButton.style.display =
+        "none";
 
-    userArea.style.display = "flex";
+    userArea.style.display =
+        "flex";
 
 
     const displayName =
@@ -111,12 +146,11 @@ function updateAuthUI(user) {
 
     userButton.textContent =
         "👤 " + displayName;
-
 }
 
 
 // ======================================================
-// KIỂM TRA SESSION KHI VÀO TRANG
+// KIỂM TRA SESSION
 // ======================================================
 
 async function checkAuthSession() {
@@ -140,7 +174,6 @@ async function checkAuthSession() {
             updateAuthUI(null);
 
             return;
-
         }
 
 
@@ -158,9 +191,7 @@ async function checkAuthSession() {
         );
 
         updateAuthUI(null);
-
     }
-
 }
 
 
@@ -169,13 +200,12 @@ async function checkAuthSession() {
 // ======================================================
 
 supabaseClient.auth.onAuthStateChange(
-    function(event, session) {
+    function (event, session) {
 
         const user =
             session?.user || null;
 
         updateAuthUI(user);
-
     }
 );
 
@@ -186,13 +216,14 @@ supabaseClient.auth.onAuthStateChange(
 
 logoutButton.addEventListener(
     "click",
-    async function() {
+    async function () {
 
         const oldText =
             logoutButton.textContent;
 
 
-        logoutButton.disabled = true;
+        logoutButton.disabled =
+            true;
 
         logoutButton.textContent =
             "Đang đăng xuất...";
@@ -214,7 +245,6 @@ logoutButton.addEventListener(
                 );
 
                 return;
-
             }
 
 
@@ -231,13 +261,14 @@ logoutButton.addEventListener(
                 "Có lỗi xảy ra khi đăng xuất."
             );
 
+
         } finally {
 
-            logoutButton.disabled = false;
+            logoutButton.disabled =
+                false;
 
             logoutButton.textContent =
                 oldText;
-
         }
 
     }
@@ -250,9 +281,7 @@ logoutButton.addEventListener(
 
 uploadButton.addEventListener(
     "click",
-    function() {
-
-        // Chưa đăng nhập thì bắt đăng nhập trước
+    function () {
 
         if (!currentUser) {
 
@@ -260,21 +289,17 @@ uploadButton.addEventListener(
                 "login.html";
 
             return;
-
         }
 
 
-        // Đã đăng nhập
-
         window.location.href =
             "upload.html";
-
     }
 );
 
 
 // ======================================================
-// LẤY PROJECT CARDS HIỆN TẠI
+// LẤY PROJECT CARDS
 // ======================================================
 
 function getProjectCards() {
@@ -282,12 +307,84 @@ function getProjectCards() {
     return document.querySelectorAll(
         ".project-card"
     );
-
 }
 
 
 // ======================================================
-// TẠO CARD CHO PROJECT NGƯỜI DÙNG ĐĂNG
+// LẤY TÊN HIỂN THỊ CỦA PROJECT
+// ======================================================
+
+function getProjectAuthor(project) {
+
+    /*
+        Hiện bảng projects chưa có cột author.
+
+        Vì vậy tạm thời project từ database
+        sẽ hiển thị là "Cộng đồng".
+
+        Sau này mình sẽ tạo profile/usernames
+        riêng và nối user_id với profile.
+    */
+
+    return "Cộng đồng";
+}
+
+
+// ======================================================
+// TẠO TAG HTML
+// ======================================================
+
+function createTagsHTML(project) {
+
+    let tags = [];
+
+
+    if (
+        project.tags &&
+        project.tags.trim()
+    ) {
+
+        tags =
+            project.tags
+                .split(",")
+                .map(function (tag) {
+
+                    return tag.trim()
+                        .replace(/^#/, "");
+
+                })
+                .filter(Boolean);
+
+    }
+
+
+    if (tags.length === 0) {
+
+        tags = [
+            createTag(project.language),
+            "AI",
+            "community"
+        ];
+    }
+
+
+    return tags
+        .slice(0, 3)
+        .map(function (tag) {
+
+            return `
+                <span>
+                    #${escapeHTML(tag)}
+                </span>
+            `;
+
+        })
+        .join("");
+}
+
+
+// ======================================================
+// TẠO CARD PROJECT TỪ SUPABASE
 // ======================================================
 
 function createUserProjectCard(project) {
@@ -301,19 +398,23 @@ function createUserProjectCard(project) {
 
 
     card.dataset.likes =
-        project.likes || 0;
+        Number(project.likes || 0);
 
     card.dataset.views =
-        project.views || 0;
+        Number(project.views || 0);
 
     card.dataset.date =
-        project.date;
+        project.created_at || "";
 
     card.dataset.projectId =
         project.id;
 
     card.dataset.userProject =
         "true";
+
+
+    const author =
+        getProjectAuthor(project);
 
 
     card.innerHTML = `
@@ -343,17 +444,7 @@ function createUserProjectCard(project) {
 
         <div class="tags">
 
-            <span>
-                #${createTag(project.language)}
-            </span>
-
-            <span>
-                #AI
-            </span>
-
-            <span>
-                #community
-            </span>
+            ${createTagsHTML(project)}
 
         </div>
 
@@ -361,17 +452,17 @@ function createUserProjectCard(project) {
         <div class="project-footer">
 
             <span>
-                👤 ${escapeHTML(project.author)}
+                👤 ${escapeHTML(author)}
             </span>
 
             <div>
 
                 <span>
-                    ♥ ${project.likes || 0}
+                    ♥ ${Number(project.likes || 0)}
                 </span>
 
                 <span>
-                    👁 ${project.views || 0}
+                    👁 ${Number(project.views || 0)}
                 </span>
 
             </div>
@@ -381,89 +472,106 @@ function createUserProjectCard(project) {
     `;
 
 
-    projectGrid.prepend(card);
+    /*
+        appendChild thay vì prepend.
 
+        Vì Supabase đã trả project mới nhất trước.
+        Card database sẽ nằm sau các project mẫu.
+    */
+
+    projectGrid.appendChild(card);
 }
 
 
 // ======================================================
-// CHỐNG CHÈN HTML
+// XÓA CARD DATABASE CŨ TRƯỚC KHI LOAD LẠI
 // ======================================================
 
-function escapeHTML(value) {
+function removeLoadedDatabaseProjects() {
 
-    const div =
-        document.createElement("div");
+    const databaseCards =
+        document.querySelectorAll(
+            '.project-card[data-user-project="true"]'
+        );
 
-    div.textContent =
-        String(value ?? "");
 
-    return div.innerHTML;
+    databaseCards.forEach(
+        function (card) {
 
+            card.remove();
+
+        }
+    );
 }
 
 
 // ======================================================
-// TẠO TAG
+// LOAD PROJECT TỪ SUPABASE
 // ======================================================
 
-function createTag(language) {
-
-    return String(language)
-
-        .toLowerCase()
-
-        .replaceAll(" ", "")
-
-        .replaceAll("/", "")
-
-        .replaceAll("#", "sharp")
-
-        .replaceAll("+", "plus");
-
-}
-
-
-// ======================================================
-// ĐỌC PROJECT ĐÃ LƯU
-// ======================================================
-
-function loadSavedProjects() {
-
-    let savedProjects = [];
-
+async function loadProjectsFromSupabase() {
 
     try {
 
-        savedProjects =
-            JSON.parse(
-                localStorage.getItem(
-                    "aiCodeHubProjects"
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("projects")
+                .select(
+                    "id, user_id, title, description, language, ai, code, tags, created_at, likes, views"
                 )
-            ) || [];
+                .order(
+                    "created_at",
+                    {
+                        ascending: false
+                    }
+                );
+
+
+        if (error) {
+
+            console.error(
+                "Không thể tải project từ Supabase:",
+                error
+            );
+
+            return;
+        }
+
+
+        removeLoadedDatabaseProjects();
+
+
+        const projects =
+            data || [];
+
+
+        projects.forEach(
+            function (project) {
+
+                createUserProjectCard(
+                    project
+                );
+
+            }
+        );
+
+
+        console.log(
+            "Đã tải project từ Supabase:",
+            projects.length
+        );
+
 
     } catch (error) {
 
         console.error(
-            "Không thể đọc project:",
+            "Lỗi khi tải project:",
             error
         );
-
-        savedProjects = [];
-
     }
-
-
-    savedProjects.forEach(
-        function(project) {
-
-            createUserProjectCard(
-                project
-            );
-
-        }
-    );
-
 }
 
 
@@ -487,7 +595,7 @@ function searchProjects() {
 
 
     projectCards.forEach(
-        function(card) {
+        function (card) {
 
             const content =
                 card.innerText
@@ -507,7 +615,6 @@ function searchProjects() {
 
                 card.style.display =
                     "none";
-
             }
 
         }
@@ -526,7 +633,6 @@ function searchProjects() {
 
         noResults.style.display =
             "none";
-
     }
 
 
@@ -541,7 +647,6 @@ function searchProjects() {
             block: "start"
 
         });
-
 }
 
 
@@ -561,14 +666,13 @@ searchButton.addEventListener(
 
 searchInput.addEventListener(
     "keydown",
-    function(event) {
+    function (event) {
 
         if (
             event.key === "Enter"
         ) {
 
             searchProjects();
-
         }
 
     }
@@ -586,11 +690,11 @@ const tagButtons =
 
 
 tagButtons.forEach(
-    function(button) {
+    function (button) {
 
         button.addEventListener(
             "click",
-            function() {
+            function () {
 
                 searchInput.value =
                     button.innerText
@@ -611,9 +715,10 @@ tagButtons.forEach(
 
 clearFilter.addEventListener(
     "click",
-    function() {
+    function () {
 
-        searchInput.value = "";
+        searchInput.value =
+            "";
 
         searchProjects();
 
@@ -629,7 +734,7 @@ clearFilter.addEventListener(
 
 sortProjects.addEventListener(
     "change",
-    function() {
+    function () {
 
         const projects =
             Array.from(
@@ -648,23 +753,23 @@ sortProjects.addEventListener(
         ) {
 
             projects.sort(
-                function(a, b) {
+                function (a, b) {
 
                     const scoreA =
                         Number(
-                            a.dataset.views
+                            a.dataset.views || 0
                         ) +
                         Number(
-                            a.dataset.likes
+                            a.dataset.likes || 0
                         );
 
 
                     const scoreB =
                         Number(
-                            b.dataset.views
+                            b.dataset.views || 0
                         ) +
                         Number(
-                            b.dataset.likes
+                            b.dataset.likes || 0
                         );
 
 
@@ -685,14 +790,14 @@ sortProjects.addEventListener(
         ) {
 
             projects.sort(
-                function(a, b) {
+                function (a, b) {
 
                     return (
                         new Date(
-                            b.dataset.date
+                            b.dataset.date || 0
                         ) -
                         new Date(
-                            a.dataset.date
+                            a.dataset.date || 0
                         )
                     );
 
@@ -709,14 +814,14 @@ sortProjects.addEventListener(
         ) {
 
             projects.sort(
-                function(a, b) {
+                function (a, b) {
 
                     return (
                         Number(
-                            b.dataset.likes
+                            b.dataset.likes || 0
                         ) -
                         Number(
-                            a.dataset.likes
+                            a.dataset.likes || 0
                         )
                     );
 
@@ -727,7 +832,7 @@ sortProjects.addEventListener(
 
 
         projects.forEach(
-            function(project) {
+            function (project) {
 
                 projectGrid.appendChild(
                     project
@@ -746,7 +851,7 @@ sortProjects.addEventListener(
 
 projectGrid.addEventListener(
     "click",
-    function(event) {
+    function (event) {
 
         const card =
             event.target.closest(
@@ -757,11 +862,12 @@ projectGrid.addEventListener(
         if (!card) {
 
             return;
-
         }
 
 
-        // ===== PROJECT NGƯỜI DÙNG =====
+        // ==================================================
+        // PROJECT TỪ SUPABASE
+        // ==================================================
 
         if (
             card.dataset.userProject ===
@@ -775,11 +881,12 @@ projectGrid.addEventListener(
                 );
 
             return;
-
         }
 
 
-        // ===== PROJECT MẪU =====
+        // ==================================================
+        // PROJECT MẪU
+        // ==================================================
 
         const projectName =
             card
@@ -797,7 +904,6 @@ projectGrid.addEventListener(
                 "project.html?project=minecraft";
 
             return;
-
         }
 
 
@@ -810,7 +916,6 @@ projectGrid.addEventListener(
                 "project.html?project=discord";
 
             return;
-
         }
 
 
@@ -832,8 +937,6 @@ projectGrid.addEventListener(
 // KHỞI ĐỘNG AI CODE HUB
 // ======================================================
 
-loadSavedProjects();
-
-console.log("AI CODE HUB script.js đã chạy");
-
 checkAuthSession();
+
+loadProjectsFromSupabase();

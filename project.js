@@ -1,18 +1,31 @@
 // ======================================================
 // AI CODE HUB - PROJECT DETAIL
+// SUPABASE VERSION
 // ======================================================
 
 
 // ======================================================
-// 3 PROJECT MẪU
-// Sau này sẽ được thay bằng database thật
+// SUPABASE
+// ======================================================
+
+const SUPABASE_URL =
+    "https://cuokcbqrnneyxtqnpzbe.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_hMaUxO2w0SV7YngkZ_o6Ew_LYWxJja0";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+// ======================================================
+// PROJECT MẪU
 // ======================================================
 
 const projects = {
-
-    // ==================================================
-    // MINECRAFT
-    // ==================================================
 
     minecraft: {
 
@@ -108,10 +121,6 @@ startGame();`
     },
 
 
-    // ==================================================
-    // DISCORD AI BOT
-    // ==================================================
-
     discord: {
 
         title: "Discord AI Bot",
@@ -188,10 +197,6 @@ VERSION = "1.0.0"`
 
     },
 
-
-    // ==================================================
-    // MODERN PORTFOLIO
-    // ==================================================
 
     portfolio: {
 
@@ -284,7 +289,7 @@ VERSION = "1.0.0"`
 
 
 // ======================================================
-// ĐỌC THÔNG TIN TỪ URL
+// ĐỌC URL
 // ======================================================
 
 const urlParams =
@@ -292,179 +297,15 @@ const urlParams =
         window.location.search
     );
 
-
 const sampleProjectID =
     urlParams.get("project");
-
 
 const userProjectID =
     urlParams.get("userProject");
 
 
 // ======================================================
-// TÌM PROJECT NGƯỜI DÙNG TRONG LOCALSTORAGE
-// ======================================================
-
-function getUserProject(projectID) {
-
-    let savedProjects = [];
-
-
-    try {
-
-        savedProjects =
-            JSON.parse(
-                localStorage.getItem(
-                    "aiCodeHubProjects"
-                )
-            ) || [];
-
-    } catch (error) {
-
-        console.error(
-            "Không thể đọc project:",
-            error
-        );
-
-        return null;
-
-    }
-
-
-    return (
-        savedProjects.find(
-            function(project) {
-
-                return (
-                    String(project.id) ===
-                    String(projectID)
-                );
-
-            }
-        ) || null
-    );
-
-}
-
-
-// ======================================================
-// CHUYỂN PROJECT NGƯỜI DÙNG SANG ĐỊNH DẠNG CODE VIEWER
-// ======================================================
-
-function normalizeUserProject(
-    savedProject
-) {
-
-    const normalizedFiles = {};
-
-
-    savedProject.files.forEach(
-        function(file, index) {
-
-            // Mỗi file cần ID riêng
-            const fileID =
-                "userFile" + index;
-
-
-            normalizedFiles[fileID] = {
-
-                name:
-                    file.name ||
-                    "untitled.txt",
-
-                code:
-                    file.code || ""
-
-            };
-
-        }
-    );
-
-
-    return {
-
-        title:
-            savedProject.title ||
-            "Untitled Project",
-
-        language:
-            savedProject.language ||
-            "Khác",
-
-        ai:
-            savedProject.ai ||
-            "Không xác định",
-
-        author:
-            savedProject.author ||
-            "Ẩn danh",
-
-        likes:
-            savedProject.likes || 0,
-
-        views:
-            savedProject.views || 0,
-
-        description:
-            savedProject.description ||
-            "Không có mô tả.",
-
-        files:
-            normalizedFiles
-
-    };
-
-}
-
-
-// ======================================================
-// XÁC ĐỊNH PROJECT CẦN HIỂN THỊ
-// ======================================================
-
-let project = null;
-
-
-// Nếu URL có userProject
-if (userProjectID) {
-
-    const savedProject =
-        getUserProject(
-            userProjectID
-        );
-
-
-    if (savedProject) {
-
-        project =
-            normalizeUserProject(
-                savedProject
-            );
-
-    }
-
-}
-
-
-// Nếu không phải project người dùng
-if (!project && sampleProjectID) {
-
-    project =
-        projects[sampleProjectID];
-
-}
-
-
-// Nếu URL không hợp lệ
-if (!project) {
-
-    project =
-        projects.minecraft;
-
-}
-
-
-// ======================================================
-// LẤY CÁC THÀNH PHẦN HTML
+// HTML ELEMENTS
 // ======================================================
 
 const pageTitle =
@@ -472,60 +313,50 @@ const pageTitle =
         "projectTitle"
     );
 
-
 const pageLanguage =
     document.getElementById(
         "projectLanguage"
     );
-
 
 const pageAI =
     document.getElementById(
         "projectAI"
     );
 
-
 const pageDescription =
     document.getElementById(
         "projectDescription"
     );
-
 
 const pageAuthor =
     document.getElementById(
         "projectAuthor"
     );
 
-
 const pageLikes =
     document.getElementById(
         "projectLikes"
     );
-
 
 const pageViews =
     document.getElementById(
         "projectViews"
     );
 
-
 const fileList =
     document.querySelector(
         ".file-list"
     );
-
 
 const codeContent =
     document.getElementById(
         "codeContent"
     );
 
-
 const currentFile =
     document.getElementById(
         "currentFile"
     );
-
 
 const copyCodeButton =
     document.getElementById(
@@ -534,61 +365,266 @@ const copyCodeButton =
 
 
 // ======================================================
-// HIỂN THỊ THÔNG TIN PROJECT
+// TRẠNG THÁI
 // ======================================================
 
-document.title =
-    project.title +
-    " - AI Code Hub";
+let project = null;
 
-
-pageTitle.textContent =
-    project.title;
-
-
-pageLanguage.textContent =
-    project.language;
-
-
-pageAI.textContent =
-    project.ai;
-
-
-pageDescription.textContent =
-    project.description;
-
-
-pageAuthor.textContent =
-    "👤 " +
-    project.author;
-
-
-pageLikes.textContent =
-    "♥ " +
-    project.likes +
-    " lượt thích";
-
-
-pageViews.textContent =
-    "👁 " +
-    project.views +
-    " lượt xem";
+let activeFile = null;
 
 
 // ======================================================
-// KIỂM TRA PROJECT CÓ FILE KHÔNG
+// CHUYỂN CODE JSON THÀNH DANH SÁCH FILE
 // ======================================================
 
-const fileIDs =
-    Object.keys(
-        project.files
+function normalizeFiles(codeValue) {
+
+    let files = [];
+
+
+    try {
+
+        if (
+            typeof codeValue === "string"
+        ) {
+
+            files =
+                JSON.parse(
+                    codeValue
+                );
+
+        } else if (
+            Array.isArray(codeValue)
+        ) {
+
+            files =
+                codeValue;
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Không thể đọc JSON source:",
+            error
+        );
+
+
+        files = [
+
+            {
+                name: "source.txt",
+
+                code:
+                    String(
+                        codeValue || ""
+                    )
+            }
+
+        ];
+
+    }
+
+
+    if (
+        !Array.isArray(files)
+    ) {
+
+        files = [];
+    }
+
+
+    const normalizedFiles = {};
+
+
+    files.forEach(
+        function (file, index) {
+
+            const fileID =
+                "userFile" + index;
+
+
+            normalizedFiles[fileID] = {
+
+                name:
+                    file?.name ||
+                    "untitled.txt",
+
+                code:
+                    file?.code ||
+                    ""
+
+            };
+
+        }
     );
 
 
-let activeFile =
-    fileIDs.length > 0
-        ? fileIDs[0]
-        : null;
+    return normalizedFiles;
+}
+
+
+// ======================================================
+// CHUYỂN PROJECT DATABASE SANG FORMAT VIEWER
+// ======================================================
+
+function normalizeSupabaseProject(
+    databaseProject
+) {
+
+    return {
+
+        title:
+            databaseProject.title ||
+            "Untitled Project",
+
+        language:
+            databaseProject.language ||
+            "Khác",
+
+        ai:
+            databaseProject.ai ||
+            "Không xác định",
+
+        author:
+            "Cộng đồng",
+
+        likes:
+            Number(
+                databaseProject.likes || 0
+            ),
+
+        views:
+            Number(
+                databaseProject.views || 0
+            ),
+
+        description:
+            databaseProject.description ||
+            "Không có mô tả.",
+
+        files:
+            normalizeFiles(
+                databaseProject.code
+            )
+
+    };
+}
+
+
+// ======================================================
+// LẤY PROJECT TỪ SUPABASE
+// ======================================================
+
+async function getSupabaseProject(
+    projectID
+) {
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("projects")
+                .select(
+                    "id, user_id, title, description, language, ai, code, tags, created_at, likes, views"
+                )
+                .eq(
+                    "id",
+                    projectID
+                )
+                .maybeSingle();
+
+
+        if (error) {
+
+            console.error(
+                "Không thể tải project:",
+                error
+            );
+
+            return null;
+        }
+
+
+        return data || null;
+
+
+    } catch (error) {
+
+        console.error(
+            "Lỗi Supabase:",
+            error
+        );
+
+        return null;
+    }
+}
+
+
+// ======================================================
+// ICON FILE
+// ======================================================
+
+function getFileIcon(fileName) {
+
+    const extension =
+        String(fileName || "")
+            .split(".")
+            .pop()
+            .toLowerCase();
+
+
+    if (extension === "html") {
+        return "◇";
+    }
+
+
+    if (extension === "css") {
+        return "#";
+    }
+
+
+    if (
+        extension === "js" ||
+        extension === "ts"
+    ) {
+        return "JS";
+    }
+
+
+    if (extension === "py") {
+        return "PY";
+    }
+
+
+    if (extension === "json") {
+        return "{}";
+    }
+
+
+    if (extension === "java") {
+        return "J";
+    }
+
+
+    if (
+        extension === "cpp" ||
+        extension === "c" ||
+        extension === "h"
+    ) {
+        return "C++";
+    }
+
+
+    if (extension === "cs") {
+        return "C#";
+    }
+
+
+    return "•";
+}
 
 
 // ======================================================
@@ -606,8 +642,15 @@ function createFileList() {
     `;
 
 
-    // Không có file
-    if (fileIDs.length === 0) {
+    const fileIDs =
+        Object.keys(
+            project.files || {}
+        );
+
+
+    if (
+        fileIDs.length === 0
+    ) {
 
         const emptyMessage =
             document.createElement(
@@ -633,12 +676,11 @@ function createFileList() {
 
 
         return;
-
     }
 
 
     fileIDs.forEach(
-        function(fileID) {
+        function (fileID) {
 
             const file =
                 project.files[fileID];
@@ -655,7 +697,9 @@ function createFileList() {
 
 
             button.textContent =
-                getFileIcon(file.name) +
+                getFileIcon(
+                    file.name
+                ) +
                 " " +
                 file.name;
 
@@ -666,7 +710,7 @@ function createFileList() {
 
             button.addEventListener(
                 "click",
-                function() {
+                function () {
 
                     showFile(
                         fileID
@@ -682,65 +726,6 @@ function createFileList() {
 
         }
     );
-
-}
-
-
-// ======================================================
-// ICON FILE ĐƠN GIẢN
-// ======================================================
-
-function getFileIcon(fileName) {
-
-    const extension =
-        fileName
-            .split(".")
-            .pop()
-            .toLowerCase();
-
-
-    if (extension === "html") {
-
-        return "◇";
-
-    }
-
-
-    if (extension === "css") {
-
-        return "#";
-
-    }
-
-
-    if (
-        extension === "js" ||
-        extension === "ts"
-    ) {
-
-        return "JS";
-
-    }
-
-
-    if (extension === "py") {
-
-        return "PY";
-
-    }
-
-
-    if (
-        extension === "json"
-    ) {
-
-        return "{}";
-
-    }
-
-
-    return "•";
-
 }
 
 
@@ -750,10 +735,13 @@ function getFileIcon(fileName) {
 
 function showFile(fileID) {
 
-    if (!project.files[fileID]) {
+    if (
+        !project ||
+        !project.files ||
+        !project.files[fileID]
+    ) {
 
         return;
-
     }
 
 
@@ -780,7 +768,7 @@ function showFile(fileID) {
 
 
     buttons.forEach(
-        function(button) {
+        function (button) {
 
             button.classList.remove(
                 "active"
@@ -801,9 +789,180 @@ function showFile(fileID) {
         activeButton.classList.add(
             "active"
         );
+    }
+}
 
+
+// ======================================================
+// HIỂN THỊ PROJECT
+// ======================================================
+
+function renderProject() {
+
+    if (!project) {
+        return;
     }
 
+
+    document.title =
+        project.title +
+        " - AI Code Hub";
+
+
+    pageTitle.textContent =
+        project.title;
+
+
+    pageLanguage.textContent =
+        project.language;
+
+
+    pageAI.textContent =
+        project.ai;
+
+
+    pageDescription.textContent =
+        project.description;
+
+
+    pageAuthor.textContent =
+        "👤 " +
+        project.author;
+
+
+    pageLikes.textContent =
+        "♥ " +
+        project.likes +
+        " lượt thích";
+
+
+    pageViews.textContent =
+        "👁 " +
+        project.views +
+        " lượt xem";
+
+
+    const fileIDs =
+        Object.keys(
+            project.files || {}
+        );
+
+
+    activeFile =
+        fileIDs.length > 0
+            ? fileIDs[0]
+            : null;
+
+
+    createFileList();
+
+
+    if (activeFile) {
+
+        showFile(
+            activeFile
+        );
+
+    } else {
+
+        currentFile.textContent =
+            "Không có file";
+
+        codeContent.textContent =
+            "";
+    }
+}
+
+
+// ======================================================
+// LOADING
+// ======================================================
+
+function showLoading() {
+
+    pageTitle.textContent =
+        "Đang tải project...";
+
+    pageLanguage.textContent =
+        "...";
+
+    pageAI.textContent =
+        "...";
+
+    pageDescription.textContent =
+        "Đang lấy dữ liệu từ AI Code Hub.";
+
+    pageAuthor.textContent =
+        "👤 ...";
+
+    currentFile.textContent =
+        "Đang tải...";
+
+    codeContent.textContent =
+        "";
+}
+
+
+// ======================================================
+// PROJECT KHÔNG TỒN TẠI
+// ======================================================
+
+function showNotFound() {
+
+    document.title =
+        "Không tìm thấy project - AI Code Hub";
+
+
+    pageTitle.textContent =
+        "Không tìm thấy project";
+
+
+    pageLanguage.textContent =
+        "—";
+
+
+    pageAI.textContent =
+        "—";
+
+
+    pageDescription.textContent =
+        "Project này không tồn tại hoặc đã bị xóa.";
+
+
+    pageAuthor.textContent =
+        "👤 —";
+
+
+    pageLikes.textContent =
+        "♥ 0 lượt thích";
+
+
+    pageViews.textContent =
+        "👁 0 lượt xem";
+
+
+    fileList.innerHTML = `
+
+        <div class="file-list-title">
+            FILES
+        </div>
+
+        <div style="
+            padding: 10px;
+            color: #8b949e;
+        ">
+            Không có file
+        </div>
+
+    `;
+
+
+    currentFile.textContent =
+        "Không có file";
+
+
+    codeContent.textContent =
+        "";
 }
 
 
@@ -813,12 +972,15 @@ function showFile(fileID) {
 
 copyCodeButton.addEventListener(
     "click",
-    async function() {
+    async function () {
 
-        if (!activeFile) {
+        if (
+            !project ||
+            !activeFile ||
+            !project.files[activeFile]
+        ) {
 
             return;
-
         }
 
 
@@ -840,8 +1002,7 @@ copyCodeButton.addEventListener(
 
         } catch (error) {
 
-            // Fallback nếu clipboard API
-            // không hoạt động khi mở file local
+            // Dùng khi mở web trực tiếp bằng file://
 
             const textarea =
                 document.createElement(
@@ -871,12 +1032,11 @@ copyCodeButton.addEventListener(
 
             copyCodeButton.textContent =
                 "✓ Đã copy";
-
         }
 
 
         setTimeout(
-            function() {
+            function () {
 
                 copyCodeButton.textContent =
                     "Copy Code";
@@ -890,25 +1050,76 @@ copyCodeButton.addEventListener(
 
 
 // ======================================================
-// KHỞI ĐỘNG
+// KHỞI ĐỘNG TRANG
 // ======================================================
 
-createFileList();
+async function initializeProjectPage() {
+
+    showLoading();
 
 
-if (activeFile) {
+    // ==================================================
+    // PROJECT NGƯỜI DÙNG
+    // ==================================================
 
-    showFile(
-        activeFile
-    );
+    if (userProjectID) {
 
-} else {
-
-    currentFile.textContent =
-        "Không có file";
+        const databaseProject =
+            await getSupabaseProject(
+                userProjectID
+            );
 
 
-    codeContent.textContent =
-        "";
+        if (!databaseProject) {
 
+            showNotFound();
+
+            return;
+        }
+
+
+        project =
+            normalizeSupabaseProject(
+                databaseProject
+            );
+
+
+        renderProject();
+
+        return;
+    }
+
+
+    // ==================================================
+    // PROJECT MẪU
+    // ==================================================
+
+    if (
+        sampleProjectID &&
+        projects[sampleProjectID]
+    ) {
+
+        project =
+            projects[sampleProjectID];
+
+
+        renderProject();
+
+        return;
+    }
+
+
+    // Không có tham số URL
+    project =
+        projects.minecraft;
+
+
+    renderProject();
 }
+
+
+// ======================================================
+// START
+// ======================================================
+
+initializeProjectPage();
