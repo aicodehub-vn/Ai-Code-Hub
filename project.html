@@ -38,6 +38,7 @@
             <a
                 href="login.html"
                 class="login-btn"
+                id="projectLoginButton"
             >
                 Đăng nhập
             </a>
@@ -101,6 +102,234 @@
                 <span id="projectViews">
                     👁 0 lượt xem
                 </span>
+
+            </div>
+
+
+            <!-- ===== OWNER ACTIONS ===== -->
+
+            <div
+                class="project-owner-actions"
+                id="projectOwnerActions"
+                hidden
+            >
+
+                <button
+                    type="button"
+                    class="project-edit-button"
+                    id="editProjectButton"
+                >
+                    ✏️ Sửa project
+                </button>
+
+                <button
+                    type="button"
+                    class="project-delete-button"
+                    id="deleteProjectButton"
+                >
+                    🗑️ Xóa project
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- ===== EDIT PROJECT PANEL ===== -->
+
+        <section
+            class="project-edit-panel"
+            id="projectEditPanel"
+            hidden
+        >
+
+            <div class="project-edit-heading">
+
+                <div>
+                    <h2>Chỉnh sửa project</h2>
+
+                    <p>
+                        Thay đổi thông tin hoặc source code của project.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="project-edit-form">
+
+                <!-- TITLE -->
+
+                <div class="form-group">
+
+                    <label for="editProjectTitle">
+                        Tên project
+                    </label>
+
+                    <input
+                        type="text"
+                        id="editProjectTitle"
+                        placeholder="Tên project"
+                        maxlength="120"
+                    >
+
+                </div>
+
+
+                <!-- DESCRIPTION -->
+
+                <div class="form-group">
+
+                    <label for="editProjectDescription">
+                        Mô tả
+                    </label>
+
+                    <textarea
+                        id="editProjectDescription"
+                        placeholder="Mô tả project"
+                    ></textarea>
+
+                </div>
+
+
+                <!-- LANGUAGE + AI -->
+
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label for="editProjectLanguage">
+                            Ngôn ngữ
+                        </label>
+
+                        <select id="editProjectLanguage">
+
+                            <option value="JavaScript">
+                                JavaScript
+                            </option>
+
+                            <option value="Python">
+                                Python
+                            </option>
+
+                            <option value="HTML / CSS">
+                                HTML / CSS
+                            </option>
+
+                            <option value="Java">
+                                Java
+                            </option>
+
+                            <option value="C#">
+                                C#
+                            </option>
+
+                            <option value="C++">
+                                C++
+                            </option>
+
+                            <option value="TypeScript">
+                                TypeScript
+                            </option>
+
+                            <option value="Rust">
+                                Rust
+                            </option>
+
+                            <option value="Khác">
+                                Khác
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="editProjectAI">
+                            AI sử dụng
+                        </label>
+
+                        <select id="editProjectAI">
+
+                            <option value="GPT-5.6">
+                                GPT-5.6
+                            </option>
+
+                            <option value="Claude">
+                                Claude
+                            </option>
+
+                            <option value="Gemini">
+                                Gemini
+                            </option>
+
+                            <option value="Copilot">
+                                Copilot
+                            </option>
+
+                            <option value="Khác">
+                                Khác
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ===== SOURCE FILES ===== -->
+
+                <div class="project-edit-files-header">
+
+                    <div>
+
+                        <h3>Source Code</h3>
+
+                        <p>
+                            Có thể sửa, thêm hoặc xóa file.
+                        </p>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        id="editAddFileButton"
+                    >
+                        + Thêm file
+                    </button>
+
+                </div>
+
+
+                <div id="editProjectFiles"></div>
+
+
+                <!-- ===== EDIT ACTIONS ===== -->
+
+                <div class="project-edit-actions">
+
+                    <button
+                        type="button"
+                        class="project-cancel-button"
+                        id="cancelEditProjectButton"
+                    >
+                        Hủy
+                    </button>
+
+                    <button
+                        type="button"
+                        class="project-save-button"
+                        id="saveProjectButton"
+                    >
+                        Lưu thay đổi
+                    </button>
+
+                </div>
 
             </div>
 
@@ -178,6 +407,58 @@
         </section>
 
     </main>
+
+
+    <!-- ===== DELETE CONFIRM MODAL ===== -->
+
+    <div
+        class="delete-project-modal"
+        id="deleteProjectModal"
+        hidden
+    >
+
+        <div class="delete-project-backdrop"></div>
+
+
+        <div class="delete-project-dialog">
+
+            <div class="delete-project-icon">
+                !
+            </div>
+
+            <h2>
+                Xóa project?
+            </h2>
+
+            <p>
+                Project sẽ bị xóa khỏi AI Code Hub.
+                Hành động này không thể hoàn tác.
+            </p>
+
+
+            <div class="delete-project-actions">
+
+                <button
+                    type="button"
+                    class="project-cancel-button"
+                    id="cancelDeleteProjectButton"
+                >
+                    Không, giữ lại
+                </button>
+
+                <button
+                    type="button"
+                    class="project-delete-confirm-button"
+                    id="confirmDeleteProjectButton"
+                >
+                    Xóa project
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
 
 
     <!-- ===== SUPABASE ===== -->

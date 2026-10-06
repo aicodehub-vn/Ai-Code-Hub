@@ -1,6 +1,6 @@
 // ======================================================
 // AI CODE HUB - MAIN JAVASCRIPT
-// SUPABASE VERSION
+// SUPABASE + PROFILES VERSION
 // ======================================================
 
 
@@ -50,7 +50,7 @@ const uploadButton =
     document.querySelector(".upload-btn");
 
 
-// ===== AUTH ELEMENTS =====
+// ===== AUTH =====
 
 const loginButton =
     document.getElementById("loginButton");
@@ -66,10 +66,17 @@ const logoutButton =
 
 
 // ======================================================
-// TRẠNG THÁI USER
+// STATE
 // ======================================================
 
 let currentUser = null;
+
+
+// Lưu profile theo UUID
+// Ví dụ:
+// profilesById["abc-123"] = { username: "Klein0989" }
+
+let profilesById = {};
 
 
 // ======================================================
@@ -104,7 +111,7 @@ function createTag(language) {
 
 
 // ======================================================
-// HIỂN THỊ TRẠNG THÁI ĐĂNG NHẬP
+// AUTH UI
 // ======================================================
 
 function updateAuthUI(user) {
@@ -112,40 +119,116 @@ function updateAuthUI(user) {
     currentUser = user;
 
 
-    // ===== CHƯA ĐĂNG NHẬP =====
-
     if (!user) {
 
-        loginButton.style.display =
-            "inline-flex";
+        if (loginButton) {
+            loginButton.style.display =
+                "inline-flex";
+        }
 
-        userArea.style.display =
-            "none";
+        if (userArea) {
+            userArea.style.display =
+                "none";
+        }
 
-        userButton.textContent =
-            "👤 Tài khoản";
+        if (userButton) {
+            userButton.textContent =
+                "👤 Tài khoản";
+        }
 
         return;
     }
 
 
-    // ===== ĐÃ ĐĂNG NHẬP =====
+    if (loginButton) {
+        loginButton.style.display =
+            "none";
+    }
 
-    loginButton.style.display =
-        "none";
+    if (userArea) {
+        userArea.style.display =
+            "flex";
+    }
 
-    userArea.style.display =
-        "flex";
+
+    const profile =
+        profilesById[user.id];
 
 
     const displayName =
+        profile?.username ||
         user.user_metadata?.display_name ||
         user.email?.split("@")[0] ||
         "Tài khoản";
 
 
-    userButton.textContent =
-        "👤 " + displayName;
+    if (userButton) {
+
+        userButton.textContent =
+            "👤 " + displayName;
+    }
+}
+
+
+// ======================================================
+// LOAD PROFILES
+// ======================================================
+
+async function loadProfiles() {
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("profiles")
+                .select(
+                    "id, username, avatar_url, bio, created_at"
+                );
+
+
+        if (error) {
+
+            console.error(
+                "Không thể tải profiles:",
+                error
+            );
+
+            return;
+        }
+
+
+        profilesById = {};
+
+
+        (data || []).forEach(
+            function (profile) {
+
+                profilesById[
+                    profile.id
+                ] = profile;
+
+            }
+        );
+
+
+        console.log(
+            "Đã tải profiles:",
+            Object.keys(
+                profilesById
+            ).length
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Lỗi khi tải profiles:",
+            error
+        );
+    }
 }
 
 
@@ -161,7 +244,8 @@ async function checkAuthSession() {
             data,
             error
         } =
-            await supabaseClient.auth.getSession();
+            await supabaseClient.auth
+                .getSession();
 
 
         if (error) {
@@ -183,6 +267,7 @@ async function checkAuthSession() {
 
         updateAuthUI(user);
 
+
     } catch (error) {
 
         console.error(
@@ -196,7 +281,7 @@ async function checkAuthSession() {
 
 
 // ======================================================
-// THEO DÕI THAY ĐỔI ĐĂNG NHẬP
+// AUTH CHANGE
 // ======================================================
 
 supabaseClient.auth.onAuthStateChange(
@@ -214,92 +299,98 @@ supabaseClient.auth.onAuthStateChange(
 // ĐĂNG XUẤT
 // ======================================================
 
-logoutButton.addEventListener(
-    "click",
-    async function () {
+if (logoutButton) {
 
-        const oldText =
-            logoutButton.textContent;
+    logoutButton.addEventListener(
+        "click",
+        async function () {
 
-
-        logoutButton.disabled =
-            true;
-
-        logoutButton.textContent =
-            "Đang đăng xuất...";
+            const oldText =
+                logoutButton.textContent;
 
 
-        try {
+            logoutButton.disabled =
+                true;
 
-            const {
-                error
-            } =
-                await supabaseClient.auth.signOut();
+            logoutButton.textContent =
+                "Đang đăng xuất...";
 
 
-            if (error) {
+            try {
+
+                const {
+                    error
+                } =
+                    await supabaseClient.auth
+                        .signOut();
+
+
+                if (error) {
+
+                    alert(
+                        "Không thể đăng xuất: " +
+                        error.message
+                    );
+
+                    return;
+                }
+
+
+                currentUser = null;
+
+                updateAuthUI(null);
+
+
+            } catch (error) {
+
+                console.error(error);
 
                 alert(
-                    "Không thể đăng xuất: " +
-                    error.message
+                    "Có lỗi xảy ra khi đăng xuất."
                 );
+
+
+            } finally {
+
+                logoutButton.disabled =
+                    false;
+
+                logoutButton.textContent =
+                    oldText;
+            }
+        }
+    );
+}
+
+
+// ======================================================
+// + ĐĂNG CODE
+// ======================================================
+
+if (uploadButton) {
+
+    uploadButton.addEventListener(
+        "click",
+        function () {
+
+            if (!currentUser) {
+
+                window.location.href =
+                    "login.html";
 
                 return;
             }
 
 
-            currentUser = null;
-
-            updateAuthUI(null);
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            alert(
-                "Có lỗi xảy ra khi đăng xuất."
-            );
-
-
-        } finally {
-
-            logoutButton.disabled =
-                false;
-
-            logoutButton.textContent =
-                oldText;
-        }
-
-    }
-);
-
-
-// ======================================================
-// NÚT + ĐĂNG CODE
-// ======================================================
-
-uploadButton.addEventListener(
-    "click",
-    function () {
-
-        if (!currentUser) {
-
             window.location.href =
-                "login.html";
-
-            return;
+                "upload.html";
         }
-
-
-        window.location.href =
-            "upload.html";
-    }
-);
+    );
+}
 
 
 // ======================================================
-// LẤY PROJECT CARDS
+// PROJECT CARDS
 // ======================================================
 
 function getProjectCards() {
@@ -311,27 +402,32 @@ function getProjectCards() {
 
 
 // ======================================================
-// LẤY TÊN HIỂN THỊ CỦA PROJECT
+// LẤY TÊN TÁC GIẢ THẬT
 // ======================================================
 
 function getProjectAuthor(project) {
 
-    /*
-        Hiện bảng projects chưa có cột author.
+    const profile =
+        profilesById[
+            project.user_id
+        ];
 
-        Vì vậy tạm thời project từ database
-        sẽ hiển thị là "Cộng đồng".
 
-        Sau này mình sẽ tạo profile/usernames
-        riêng và nối user_id với profile.
-    */
+    if (
+        profile &&
+        profile.username
+    ) {
+
+        return profile.username;
+    }
+
 
     return "Cộng đồng";
 }
 
 
 // ======================================================
-// TẠO TAG HTML
+// TAG HTML
 // ======================================================
 
 function createTagsHTML(project) {
@@ -347,21 +443,27 @@ function createTagsHTML(project) {
         tags =
             project.tags
                 .split(",")
-                .map(function (tag) {
+                .map(
+                    function (tag) {
 
-                    return tag.trim()
-                        .replace(/^#/, "");
-
-                })
+                        return tag
+                            .trim()
+                            .replace(
+                                /^#/,
+                                ""
+                            );
+                    }
+                )
                 .filter(Boolean);
-
     }
 
 
     if (tags.length === 0) {
 
         tags = [
-            createTag(project.language),
+            createTag(
+                project.language
+            ),
             "AI",
             "community"
         ];
@@ -370,27 +472,30 @@ function createTagsHTML(project) {
 
     return tags
         .slice(0, 3)
-        .map(function (tag) {
+        .map(
+            function (tag) {
 
-            return `
-                <span>
-                    #${escapeHTML(tag)}
-                </span>
-            `;
-
-        })
+                return `
+                    <span>
+                        #${escapeHTML(tag)}
+                    </span>
+                `;
+            }
+        )
         .join("");
 }
 
 
 // ======================================================
-// TẠO CARD PROJECT TỪ SUPABASE
+// TẠO CARD PROJECT DATABASE
 // ======================================================
 
 function createUserProjectCard(project) {
 
     const card =
-        document.createElement("article");
+        document.createElement(
+            "article"
+        );
 
 
     card.className =
@@ -398,19 +503,31 @@ function createUserProjectCard(project) {
 
 
     card.dataset.likes =
-        Number(project.likes || 0);
+        Number(
+            project.likes || 0
+        );
+
 
     card.dataset.views =
-        Number(project.views || 0);
+        Number(
+            project.views || 0
+        );
+
 
     card.dataset.date =
         project.created_at || "";
 
+
     card.dataset.projectId =
         project.id;
 
+
     card.dataset.userProject =
         "true";
+
+
+    card.dataset.ownerId =
+        project.user_id || "";
 
 
     const author =
@@ -422,29 +539,39 @@ function createUserProjectCard(project) {
         <div class="project-top">
 
             <span class="language">
-                ${escapeHTML(project.language)}
+                ${escapeHTML(
+                    project.language
+                )}
             </span>
 
             <span class="ai-model">
-                ${escapeHTML(project.ai)}
+                ${escapeHTML(
+                    project.ai
+                )}
             </span>
 
         </div>
 
 
         <h3>
-            ${escapeHTML(project.title)}
+            ${escapeHTML(
+                project.title
+            )}
         </h3>
 
 
         <p>
-            ${escapeHTML(project.description)}
+            ${escapeHTML(
+                project.description
+            )}
         </p>
 
 
         <div class="tags">
 
-            ${createTagsHTML(project)}
+            ${createTagsHTML(
+                project
+            )}
 
         </div>
 
@@ -458,11 +585,15 @@ function createUserProjectCard(project) {
             <div>
 
                 <span>
-                    ♥ ${Number(project.likes || 0)}
+                    ♥ ${Number(
+                        project.likes || 0
+                    )}
                 </span>
 
                 <span>
-                    👁 ${Number(project.views || 0)}
+                    👁 ${Number(
+                        project.views || 0
+                    )}
                 </span>
 
             </div>
@@ -472,19 +603,14 @@ function createUserProjectCard(project) {
     `;
 
 
-    /*
-        appendChild thay vì prepend.
-
-        Vì Supabase đã trả project mới nhất trước.
-        Card database sẽ nằm sau các project mẫu.
-    */
-
-    projectGrid.appendChild(card);
+    projectGrid.appendChild(
+        card
+    );
 }
 
 
 // ======================================================
-// XÓA CARD DATABASE CŨ TRƯỚC KHI LOAD LẠI
+// XÓA CARD DATABASE CŨ
 // ======================================================
 
 function removeLoadedDatabaseProjects() {
@@ -499,14 +625,13 @@ function removeLoadedDatabaseProjects() {
         function (card) {
 
             card.remove();
-
         }
     );
 }
 
 
 // ======================================================
-// LOAD PROJECT TỪ SUPABASE
+// LOAD PROJECTS
 // ======================================================
 
 async function loadProjectsFromSupabase() {
@@ -544,24 +669,23 @@ async function loadProjectsFromSupabase() {
         removeLoadedDatabaseProjects();
 
 
-        const projects =
+        const databaseProjects =
             data || [];
 
 
-        projects.forEach(
+        databaseProjects.forEach(
             function (project) {
 
                 createUserProjectCard(
                     project
                 );
-
             }
         );
 
 
         console.log(
-            "Đã tải project từ Supabase:",
-            projects.length
+            "Đã tải project:",
+            databaseProjects.length
         );
 
 
@@ -576,7 +700,7 @@ async function loadProjectsFromSupabase() {
 
 
 // ======================================================
-// HỆ THỐNG TÌM KIẾM
+// SEARCH
 // ======================================================
 
 function searchProjects() {
@@ -603,7 +727,9 @@ function searchProjects() {
 
 
             if (
-                content.includes(keyword)
+                content.includes(
+                    keyword
+                )
             ) {
 
                 card.style.display =
@@ -611,12 +737,12 @@ function searchProjects() {
 
                 foundProjects++;
 
+
             } else {
 
                 card.style.display =
                     "none";
             }
-
         }
     );
 
@@ -629,6 +755,7 @@ function searchProjects() {
         noResultsKeyword.innerText =
             searchInput.value;
 
+
     } else {
 
         noResults.style.display =
@@ -640,43 +767,47 @@ function searchProjects() {
         .querySelector(
             ".projects-section"
         )
-        .scrollIntoView({
-
-            behavior: "smooth",
-
-            block: "start"
-
-        });
+        ?.scrollIntoView(
+            {
+                behavior: "smooth",
+                block: "start"
+            }
+        );
 }
 
 
 // ======================================================
-// NÚT TÌM KIẾM
+// SEARCH BUTTON
 // ======================================================
 
-searchButton.addEventListener(
-    "click",
-    searchProjects
-);
+if (searchButton) {
+
+    searchButton.addEventListener(
+        "click",
+        searchProjects
+    );
+}
 
 
 // ======================================================
-// ENTER ĐỂ TÌM
+// ENTER SEARCH
 // ======================================================
 
-searchInput.addEventListener(
-    "keydown",
-    function (event) {
+if (searchInput) {
 
-        if (
-            event.key === "Enter"
-        ) {
+    searchInput.addEventListener(
+        "keydown",
+        function (event) {
 
-            searchProjects();
+            if (
+                event.key === "Enter"
+            ) {
+
+                searchProjects();
+            }
         }
-
-    }
-);
+    );
+}
 
 
 // ======================================================
@@ -701,242 +832,241 @@ tagButtons.forEach(
                         .trim();
 
                 searchProjects();
-
             }
         );
-
     }
 );
 
 
 // ======================================================
-// XÓA BỘ LỌC
+// CLEAR FILTER
 // ======================================================
 
-clearFilter.addEventListener(
-    "click",
-    function () {
+if (clearFilter) {
 
-        searchInput.value =
-            "";
+    clearFilter.addEventListener(
+        "click",
+        function () {
 
-        searchProjects();
+            searchInput.value =
+                "";
 
-        searchInput.focus();
+            searchProjects();
 
-    }
-);
+            searchInput.focus();
+        }
+    );
+}
 
 
 // ======================================================
-// SORT PROJECT
+// SORT
 // ======================================================
 
-sortProjects.addEventListener(
-    "change",
-    function () {
+if (sortProjects) {
 
-        const projects =
-            Array.from(
-                getProjectCards()
-            );
+    sortProjects.addEventListener(
+        "change",
+        function () {
 
-
-        const sortType =
-            sortProjects.value;
-
-
-        // ===== TRENDING =====
-
-        if (
-            sortType === "trending"
-        ) {
-
-            projects.sort(
-                function (a, b) {
-
-                    const scoreA =
-                        Number(
-                            a.dataset.views || 0
-                        ) +
-                        Number(
-                            a.dataset.likes || 0
-                        );
-
-
-                    const scoreB =
-                        Number(
-                            b.dataset.views || 0
-                        ) +
-                        Number(
-                            b.dataset.likes || 0
-                        );
-
-
-                    return (
-                        scoreB - scoreA
-                    );
-
-                }
-            );
-
-        }
-
-
-        // ===== MỚI NHẤT =====
-
-        if (
-            sortType === "newest"
-        ) {
-
-            projects.sort(
-                function (a, b) {
-
-                    return (
-                        new Date(
-                            b.dataset.date || 0
-                        ) -
-                        new Date(
-                            a.dataset.date || 0
-                        )
-                    );
-
-                }
-            );
-
-        }
-
-
-        // ===== NHIỀU LIKE =====
-
-        if (
-            sortType === "likes"
-        ) {
-
-            projects.sort(
-                function (a, b) {
-
-                    return (
-                        Number(
-                            b.dataset.likes || 0
-                        ) -
-                        Number(
-                            a.dataset.likes || 0
-                        )
-                    );
-
-                }
-            );
-
-        }
-
-
-        projects.forEach(
-            function (project) {
-
-                projectGrid.appendChild(
-                    project
+            const projectCards =
+                Array.from(
+                    getProjectCards()
                 );
 
-            }
-        );
 
-    }
-);
+            const sortType =
+                sortProjects.value;
+
+
+            if (
+                sortType === "trending"
+            ) {
+
+                projectCards.sort(
+                    function (a, b) {
+
+                        const scoreA =
+                            Number(
+                                a.dataset.views || 0
+                            ) +
+                            Number(
+                                a.dataset.likes || 0
+                            );
+
+
+                        const scoreB =
+                            Number(
+                                b.dataset.views || 0
+                            ) +
+                            Number(
+                                b.dataset.likes || 0
+                            );
+
+
+                        return (
+                            scoreB -
+                            scoreA
+                        );
+                    }
+                );
+            }
+
+
+            if (
+                sortType === "newest"
+            ) {
+
+                projectCards.sort(
+                    function (a, b) {
+
+                        return (
+                            new Date(
+                                b.dataset.date || 0
+                            ) -
+                            new Date(
+                                a.dataset.date || 0
+                            )
+                        );
+                    }
+                );
+            }
+
+
+            if (
+                sortType === "likes"
+            ) {
+
+                projectCards.sort(
+                    function (a, b) {
+
+                        return (
+                            Number(
+                                b.dataset.likes || 0
+                            ) -
+                            Number(
+                                a.dataset.likes || 0
+                            )
+                        );
+                    }
+                );
+            }
+
+
+            projectCards.forEach(
+                function (card) {
+
+                    projectGrid.appendChild(
+                        card
+                    );
+                }
+            );
+        }
+    );
+}
 
 
 // ======================================================
 // CLICK PROJECT
 // ======================================================
 
-projectGrid.addEventListener(
-    "click",
-    function (event) {
+if (projectGrid) {
 
-        const card =
-            event.target.closest(
-                ".project-card"
-            );
+    projectGrid.addEventListener(
+        "click",
+        function (event) {
 
-
-        if (!card) {
-
-            return;
-        }
-
-
-        // ==================================================
-        // PROJECT TỪ SUPABASE
-        // ==================================================
-
-        if (
-            card.dataset.userProject ===
-            "true"
-        ) {
-
-            window.location.href =
-                "project.html?userProject=" +
-                encodeURIComponent(
-                    card.dataset.projectId
+            const card =
+                event.target.closest(
+                    ".project-card"
                 );
 
-            return;
+
+            if (!card) {
+
+                return;
+            }
+
+
+            // DATABASE PROJECT
+
+            if (
+                card.dataset.userProject ===
+                "true"
+            ) {
+
+                window.location.href =
+                    "project.html?userProject=" +
+                    encodeURIComponent(
+                        card.dataset.projectId
+                    );
+
+                return;
+            }
+
+
+            // PROJECT MẪU
+
+            const projectName =
+                card
+                    .querySelector("h3")
+                    ?.innerText
+                    .trim();
+
+
+            if (
+                projectName ===
+                "Minecraft HTML5"
+            ) {
+
+                window.location.href =
+                    "project.html?project=minecraft";
+
+                return;
+            }
+
+
+            if (
+                projectName ===
+                "Discord AI Bot"
+            ) {
+
+                window.location.href =
+                    "project.html?project=discord";
+
+                return;
+            }
+
+
+            if (
+                projectName ===
+                "Modern Portfolio"
+            ) {
+
+                window.location.href =
+                    "project.html?project=portfolio";
+            }
         }
-
-
-        // ==================================================
-        // PROJECT MẪU
-        // ==================================================
-
-        const projectName =
-            card
-                .querySelector("h3")
-                .innerText
-                .trim();
-
-
-        if (
-            projectName ===
-            "Minecraft HTML5"
-        ) {
-
-            window.location.href =
-                "project.html?project=minecraft";
-
-            return;
-        }
-
-
-        if (
-            projectName ===
-            "Discord AI Bot"
-        ) {
-
-            window.location.href =
-                "project.html?project=discord";
-
-            return;
-        }
-
-
-        if (
-            projectName ===
-            "Modern Portfolio"
-        ) {
-
-            window.location.href =
-                "project.html?project=portfolio";
-
-        }
-
-    }
-);
+    );
+}
 
 
 // ======================================================
-// KHỞI ĐỘNG AI CODE HUB
+// KHỞI ĐỘNG
 // ======================================================
 
-checkAuthSession();
+async function initializeAIHub() {
 
-loadProjectsFromSupabase();
+    // Quan trọng:
+    // phải lấy profiles TRƯỚC
+    // rồi mới dựng project cards.
+
+    await loadProfiles();
+
+    await checkAuthSession();
+
+    await loadProjectsFromSupabase();
+}
+
+
+initializeAIHub();
