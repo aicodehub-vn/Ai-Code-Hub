@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Code Hub</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ===== NAVBAR ===== -->
+
+    <header class="navbar">
+
+        <div class="logo">
+            AI<span>CODE</span>
+        </div>
+
+        <nav class="nav-links">
+
+            <a href="#projects">
+                Khám phá
+            </a>
+
+            <a href="#projects">
+                Trending
+            </a>
+
+            <a href="#projects">
+                Mới nhất
+            </a>
+
+        </nav>
+
+        <div class="nav-actions">
+
+            <button class="upload-btn">
+                + Đăng code
+            </button>
+
+            <!-- Chưa đăng nhập -->
+            <a href="login.html" class="login-btn" id="loginButton">
+                Đăng nhập
+            </a>
+
+            <!-- Đã đăng nhập -->
+            <div id="userArea" style="display: none; align-items: center; gap: 10px;">
+
+                <button
+                    id="userButton"
+                    class="login-btn"
+                    type="button"
+                    style="cursor: default;"
+                >
+                    👤 Tài khoản
+                </button>
+
+                <button
+                    id="logoutButton"
+                    class="login-btn"
+                    type="button"
+                    style="cursor: pointer;"
+                >
+                    Đăng xuất
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- ===== MAIN ===== -->
+
+    <main>
+
+
+        <!-- ===== HERO ===== -->
+
+        <section class="hero">
+
+            <div class="hero-badge">
+                ✦ Code được tạo bởi AI, chia sẻ bởi cộng đồng
+            </div>
+
+
+            <h1>
+                Khám phá. Chia sẻ.<br>
+                <span>Xây dựng cùng AI.</span>
+            </h1>
+
+
+            <p class="hero-description">
+                Nơi cộng đồng chia sẻ source code, project và những ý tưởng
+                được tạo ra với sự hỗ trợ của trí tuệ nhân tạo.
+            </p>
+
+
+            <!-- ===== SEARCH ===== -->
+
+            <div class="search-box">
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Tìm project, ngôn ngữ, AI..."
+                >
+
+                <button id="searchButton">
+                    Tìm kiếm
+                </button>
+
+            </div>
+
+
+            <!-- ===== POPULAR TAGS ===== -->
+
+            <div class="popular-tags">
+
+                <span>
+                    Phổ biến:
+                </span>
+
+                <button>
+                    JavaScript
+                </button>
+
+                <button>
+                    Python
+                </button>
+
+                <button>
+                    HTML
+                </button>
+
+                <button>
+                    Game
+                </button>
+
+                <button>
+                    AI Tools
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- ===== PROJECTS ===== -->
+
+        <section
+            class="projects-section"
+            id="projects"
+        >
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        Khám phá project
+                    </h2>
+
+                    <p>
+                        Những project được cộng đồng chia sẻ
+                    </p>
+
+                </div>
+
+
+                <!-- ===== SORT ===== -->
+
+                <select id="sortProjects">
+
+                    <option value="trending">
+                        🔥 Trending
+                    </option>
+
+                    <option value="newest">
+                        🆕 Mới nhất
+                    </option>
+
+                    <option value="likes">
+                        ❤️ Nhiều lượt thích
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- ===== PROJECT GRID ===== -->
+
+            <div class="project-grid">
+
+
+                <!-- ===== PROJECT 1 ===== -->
+
+                <article
+                    class="project-card"
+                    data-likes="243"
+                    data-views="1200"
+                    data-date="2026-10-05"
+                >
+
+                    <div class="project-top">
+
+                        <span class="language">
+                            JavaScript
+                        </span>
+
+                        <span class="ai-model">
+                            GPT-5.6
+                        </span>
+
+                    </div>
+
+
+                    <h3>
+                        Minecraft HTML5
+                    </h3>
+
+
+                    <p>
+                        Minecraft mini chạy trực tiếp trên trình duyệt,
+                        được xây dựng bằng HTML5 và JavaScript.
+                    </p>
+
+
+                    <div class="tags">
+
+                        <span>
+                            #game
+                        </span>
+
+                        <span>
+                            #minecraft
+                        </span>
+
+                        <span>
+                            #html5
+                        </span>
+
+                    </div>
+
+
+                    <div class="project-footer">
+
+                        <span>
+                            👤 Siro
+                        </span>
+
+                        <div>
+
+                            <span>
+                                ♥ 243
+                            </span>
+
+                            <span>
+                                👁 1.2K
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+
+                <!-- ===== PROJECT 2 ===== -->
+
+                <article
+                    class="project-card"
+                    data-likes="156"
+                    data-views="840"
+                    data-date="2026-10-06"
+                >
+
+                    <div class="project-top">
+
+                        <span class="language">
+                            Python
+                        </span>
+
+                        <span class="ai-model">
+                            Claude
+                        </span>
+
+                    </div>
+
+
+                    <h3>
+                        Discord AI Bot
+                    </h3>
+
+
+                    <p>
+                        Bot Discord có khả năng trò chuyện,
+                        quản lý server và thực hiện lệnh tự động.
+                    </p>
+
+
+                    <div class="tags">
+
+                        <span>
+                            #discord
+                        </span>
+
+                        <span>
+                            #bot
+                        </span>
+
+                        <span>
+                            #python
+                        </span>
+
+                    </div>
+
+
+                    <div class="project-footer">
+
+                        <span>
+                            👤 Nova
+                        </span>
+
+                        <div>
+
+                            <span>
+                                ♥ 156
+                            </span>
+
+                            <span>
+                                👁 840
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+
+                <!-- ===== PROJECT 3 ===== -->
+
+                <article
+                    class="project-card"
+                    data-likes="89"
+                    data-views="520"
+                    data-date="2026-10-04"
+                >
+
+                    <div class="project-top">
+
+                        <span class="language">
+                            HTML / CSS
+                        </span>
+
+                        <span class="ai-model">
+                            Gemini
+                        </span>
+
+                    </div>
+
+
+                    <h3>
+                        Modern Portfolio
+                    </h3>
+
+
+                    <p>
+                        Template portfolio tối giản với giao diện responsive
+                        dành cho developer.
+                    </p>
+
+
+                    <div class="tags">
+
+                        <span>
+                            #website
+                        </span>
+
+                        <span>
+                            #portfolio
+                        </span>
+
+                        <span>
+                            #ui
+                        </span>
+
+                    </div>
+
+
+                    <div class="project-footer">
+
+                        <span>
+                            👤 Kira
+                        </span>
+
+                        <div>
+
+                            <span>
+                                ♥ 89
+                            </span>
+
+                            <span>
+                                👁 520
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+
+            <!-- ===== NO RESULTS ===== -->
+
+            <div
+                id="noResults"
+                class="no-results"
+            >
+
+                <div class="no-results-icon">
+                    &lt;/&gt;
+                </div>
+
+
+                <h3>
+                    Không tìm thấy project
+                </h3>
+
+
+                <p>
+                    Không có project nào phù hợp với
+                    "<span id="noResultsKeyword"></span>"
+                </p>
+
+
+                <button id="clearFilter">
+                    Xóa bộ lọc
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ===== SUPABASE ===== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+    <!-- ===== JAVASCRIPT ===== -->
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
