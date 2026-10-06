@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Đăng nhập - AI Code Hub</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+</head>
+
+<body class="auth-body">
+
+    <!-- ===== NAVBAR ===== -->
+
+    <header class="navbar">
+
+        <a
+            href="index.html"
+            class="logo auth-logo"
+        >
+            AI<span>CODE</span>
+        </a>
+
+        <div class="nav-actions">
+
+            <a
+                href="index.html"
+                class="login-btn"
+            >
+                ← Về trang chủ
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <!-- ==================================================
+         AUTH PAGE
+    =================================================== -->
+
+    <main class="auth-page">
+
+        <section class="auth-container">
+
+            <!-- ===== HEADER ===== -->
+
+            <div class="auth-header">
+
+                <div class="auth-icon">
+                    &lt;/&gt;
+                </div>
+
+                <h1 id="authTitle">
+                    Chào mừng trở lại
+                </h1>
+
+                <p id="authDescription">
+                    Đăng nhập để chia sẻ và quản lý project của bạn.
+                </p>
+
+            </div>
+
+
+            <!-- ==================================================
+                 LOGIN FORM
+            =================================================== -->
+
+            <form
+                id="loginForm"
+                class="auth-form"
+            >
+
+                <!-- EMAIL -->
+
+                <div class="auth-field">
+
+                    <label for="loginEmail">
+                        Email
+                    </label>
+
+                    <input
+                        type="email"
+                        id="loginEmail"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- PASSWORD -->
+
+                <div class="auth-field">
+
+                    <div class="auth-label-row">
+
+                        <label for="loginPassword">
+                            Mật khẩu
+                        </label>
+
+                        <button
+                            type="button"
+                            class="forgot-password"
+                            id="forgotPassword"
+                        >
+                            Quên mật khẩu?
+                        </button>
+
+                    </div>
+
+
+                    <div class="password-wrapper">
+
+                        <input
+                            type="password"
+                            id="loginPassword"
+                            placeholder="Nhập mật khẩu"
+                            autocomplete="current-password"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            data-target="loginPassword"
+                            aria-label="Hiện hoặc ẩn mật khẩu"
+                        >
+                            Hiện
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- MESSAGE -->
+
+                <div
+                    id="loginMessage"
+                    class="auth-message"
+                ></div>
+
+
+                <!-- LOGIN BUTTON -->
+
+                <button
+                    type="submit"
+                    class="auth-submit"
+                >
+                    Đăng nhập
+                </button>
+
+
+                <!-- SWITCH -->
+
+                <p class="auth-switch">
+
+                    Chưa có tài khoản?
+
+                    <button
+                        type="button"
+                        id="showRegister"
+                    >
+                        Đăng ký ngay
+                    </button>
+
+                </p>
+
+            </form>
+
+
+            <!-- ==================================================
+                 REGISTER FORM
+            =================================================== -->
+
+            <form
+                id="registerForm"
+                class="auth-form auth-hidden"
+            >
+
+                <!-- USERNAME -->
+
+                <div class="auth-field">
+
+                    <label for="registerName">
+                        Tên hiển thị
+                    </label>
+
+                    <input
+                        type="text"
+                        id="registerName"
+                        placeholder="Tên của bạn"
+                        autocomplete="nickname"
+                        minlength="2"
+                        maxlength="30"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- EMAIL -->
+
+                <div class="auth-field">
+
+                    <label for="registerEmail">
+                        Email
+                    </label>
+
+                    <input
+                        type="email"
+                        id="registerEmail"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- PASSWORD -->
+
+                <div class="auth-field">
+
+                    <label for="registerPassword">
+                        Mật khẩu
+                    </label>
+
+                    <div class="password-wrapper">
+
+                        <input
+                            type="password"
+                            id="registerPassword"
+                            placeholder="Tối thiểu 6 ký tự"
+                            autocomplete="new-password"
+                            minlength="6"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            data-target="registerPassword"
+                            aria-label="Hiện hoặc ẩn mật khẩu"
+                        >
+                            Hiện
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- CONFIRM PASSWORD -->
+
+                <div class="auth-field">
+
+                    <label for="confirmPassword">
+                        Xác nhận mật khẩu
+                    </label>
+
+                    <div class="password-wrapper">
+
+                        <input
+                            type="password"
+                            id="confirmPassword"
+                            placeholder="Nhập lại mật khẩu"
+                            autocomplete="new-password"
+                            minlength="6"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            data-target="confirmPassword"
+                            aria-label="Hiện hoặc ẩn mật khẩu"
+                        >
+                            Hiện
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- MESSAGE -->
+
+                <div
+                    id="registerMessage"
+                    class="auth-message"
+                ></div>
+
+
+                <!-- REGISTER BUTTON -->
+
+                <button
+                    type="submit"
+                    class="auth-submit"
+                >
+                    Tạo tài khoản
+                </button>
+
+
+                <!-- SWITCH -->
+
+                <p class="auth-switch">
+
+                    Đã có tài khoản?
+
+                    <button
+                        type="button"
+                        id="showLogin"
+                    >
+                        Đăng nhập
+                    </button>
+
+                </p>
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+    <!-- SUPABASE SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- AI CODE HUB -->
+    <script src="login.js"></script>
+
+</body>
+
+</html>

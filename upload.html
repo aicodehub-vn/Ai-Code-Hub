@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Đăng Project - AI Code Hub</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ===== NAVBAR ===== -->
+
+    <header class="navbar">
+
+        <div class="logo">
+            AI<span>CODE</span>
+        </div>
+
+        <nav class="nav-links">
+            <a href="index.html">← Trang chủ</a>
+            <a href="index.html">Khám phá</a>
+        </nav>
+
+    </header>
+
+
+    <!-- ===== UPLOAD PAGE ===== -->
+
+    <main class="upload-page">
+
+        <section class="upload-header">
+
+            <div class="hero-badge">
+                ✦ Chia sẻ với cộng đồng
+            </div>
+
+            <h1>
+                Đăng project mới
+            </h1>
+
+            <p>
+                Chia sẻ source code được xây dựng với sự hỗ trợ
+                của AI.
+            </p>
+
+        </section>
+
+
+        <!-- ===== FORM ===== -->
+
+        <form id="uploadForm" class="upload-form">
+
+
+            <!-- TÊN PROJECT -->
+
+            <div class="form-group">
+
+                <label for="projectName">
+                    Tên project
+                </label>
+
+                <input
+                    type="text"
+                    id="projectName"
+                    placeholder="Ví dụ: Minecraft HTML5"
+                    required
+                >
+
+            </div>
+
+
+            <!-- MÔ TẢ -->
+
+            <div class="form-group">
+
+                <label for="projectDescriptionInput">
+                    Mô tả
+                </label>
+
+                <textarea
+                    id="projectDescriptionInput"
+                    placeholder="Project này làm được gì?"
+                    required
+                ></textarea>
+
+            </div>
+
+
+            <!-- HÀNG 2 CỘT -->
+
+            <div class="form-row">
+
+
+                <!-- NGÔN NGỮ -->
+
+                <div class="form-group">
+
+                    <label for="projectLanguageInput">
+                        Ngôn ngữ
+                    </label>
+
+                    <select
+                        id="projectLanguageInput"
+                        required
+                    >
+
+                        <option value="">
+                            Chọn ngôn ngữ
+                        </option>
+
+                        <option>JavaScript</option>
+                        <option>Python</option>
+                        <option>HTML / CSS</option>
+                        <option>Java</option>
+                        <option>C#</option>
+                        <option>C++</option>
+                        <option>TypeScript</option>
+                        <option>Rust</option>
+                        <option>Khác</option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- AI -->
+
+                <div class="form-group">
+
+                    <label for="projectAIInput">
+                        AI đã sử dụng
+                    </label>
+
+                    <select
+                        id="projectAIInput"
+                        required
+                    >
+
+                        <option value="">
+                            Chọn AI
+                        </option>
+
+                        <option>GPT-5.6</option>
+                        <option>Claude</option>
+                        <option>Gemini</option>
+                        <option>Copilot</option>
+                        <option>Khác</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- TÁC GIẢ -->
+
+            <div class="form-group">
+
+                <label for="projectAuthorInput">
+                    Tên tác giả
+                </label>
+
+                <input
+                    type="text"
+                    id="projectAuthorInput"
+                    placeholder="Tên hiển thị của bạn"
+                    required
+                >
+
+            </div>
+
+
+            <!-- ===== SOURCE FILES ===== -->
+
+            <div class="files-editor-header">
+
+                <div>
+
+                    <h2>
+                        Source Code
+                    </h2>
+
+                    <p>
+                        Thêm các file thuộc project của bạn
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    id="addFileButton"
+                    class="secondary-button"
+                >
+                    + Thêm file
+                </button>
+
+            </div>
+
+
+            <div id="uploadFiles">
+
+
+                <!-- FILE ĐẦU TIÊN -->
+
+                <div class="upload-file">
+
+                    <div class="upload-file-header">
+
+                        <input
+                            type="text"
+                            class="file-name-input"
+                            placeholder="Tên file, ví dụ: index.html"
+                            required
+                        >
+
+                        <button
+                            type="button"
+                            class="remove-file-button"
+                        >
+                            Xóa
+                        </button>
+
+                    </div>
+
+                    <textarea
+                        class="file-code-input"
+                        placeholder="// Dán source code vào đây..."
+                        spellcheck="false"
+                        required
+                    ></textarea>
+
+                </div>
+
+            </div>
+
+
+            <!-- ===== SUBMIT ===== -->
+
+            <div class="upload-submit">
+
+                <button
+                    type="submit"
+                    class="publish-button"
+                >
+                    Đăng project
+                </button>
+
+            </div>
+
+        </form>
+
+    </main>
+
+
+    <script src="upload.js"></script>
+
+</body>
+
+</html>

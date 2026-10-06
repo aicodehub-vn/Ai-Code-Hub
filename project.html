@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Code Hub - Project</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ===== NAVBAR ===== -->
+
+    <header class="navbar">
+
+        <div class="logo">
+            AI<span>CODE</span>
+        </div>
+
+        <nav class="nav-links">
+            <a href="index.html">← Trang chủ</a>
+            <a href="index.html#projects">Khám phá</a>
+        </nav>
+
+        <div class="nav-actions">
+
+            <button class="upload-btn">
+                + Đăng code
+            </button>
+
+            <button class="login-btn">
+                Đăng nhập
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- ===== PROJECT PAGE ===== -->
+
+    <main class="project-page">
+
+
+        <!-- ===== PROJECT INFO ===== -->
+
+        <section class="project-detail-header">
+
+            <div class="project-detail-tags">
+
+                <span
+                    class="language"
+                    id="projectLanguage"
+                >
+                    JavaScript
+                </span>
+
+                <span
+                    class="ai-model"
+                    id="projectAI"
+                >
+                    GPT-5.6
+                </span>
+
+            </div>
+
+
+            <h1 id="projectTitle">
+                Minecraft HTML5
+            </h1>
+
+
+            <p
+                class="project-detail-description"
+                id="projectDescription"
+            >
+                Minecraft mini chạy trực tiếp trên trình duyệt,
+                được xây dựng bằng HTML5 và JavaScript với sự hỗ trợ của AI.
+            </p>
+
+
+            <div class="project-meta">
+
+                <span id="projectAuthor">
+                    👤 Siro
+                </span>
+
+                <span id="projectLikes">
+                    ♥ 243 lượt thích
+                </span>
+
+                <span id="projectViews">
+                    👁 1.2K lượt xem
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- ===== SOURCE CODE ===== -->
+
+        <section class="source-section">
+
+            <div class="source-header">
+
+                <div>
+
+                    <h2>
+                        Source Code
+                    </h2>
+
+                    <p>
+                        Khám phá mã nguồn của project
+                    </p>
+
+                </div>
+
+
+                <button id="copyCodeButton">
+                    Copy Code
+                </button>
+
+            </div>
+
+
+            <!-- ===== CODE WORKSPACE ===== -->
+
+            <div class="code-workspace">
+
+
+                <!-- ===== FILE LIST ===== -->
+
+                <aside class="file-list">
+
+                    <div class="file-list-title">
+                        FILES
+                    </div>
+
+                    <!--
+                        Danh sách file sẽ được
+                        project.js tự động tạo ở đây.
+                    -->
+
+                </aside>
+
+
+                <!-- ===== CODE VIEWER ===== -->
+
+                <div class="code-viewer">
+
+                    <div class="code-toolbar">
+
+                        <span id="currentFile">
+                            Loading...
+                        </span>
+
+                        <span>
+                            Read only
+                        </span>
+
+                    </div>
+
+
+                    <pre><code id="codeContent"></code></pre>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ===== JAVASCRIPT ===== -->
+
+    <script src="project.js"></script>
+
+</body>
+
+</html>
