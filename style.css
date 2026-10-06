@@ -2963,3 +2963,202 @@ body {
             0.01ms !important;
     }
 }
+
+/* =====================================================
+   FIX LIKE BUTTON - CLEAN GITHUB STYLE
+   ===================================================== */
+
+.project-meta #projectLikeButton {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    gap: 6px !important;
+
+    width: auto !important;
+    height: auto !important;
+
+    min-width: 0 !important;
+    min-height: 0 !important;
+
+    margin: 0 !important;
+    padding: 3px 7px !important;
+
+    background: transparent !important;
+
+    border: 0 !important;
+    outline: 0 !important;
+
+    border-radius: 6px !important;
+
+    box-shadow: none !important;
+
+    color: #8b949e !important;
+
+    font-family: inherit !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    line-height: 1.4 !important;
+
+    text-align: left !important;
+    text-decoration: none !important;
+
+    cursor: pointer !important;
+
+    vertical-align: middle !important;
+
+    transition:
+        color 0.18s ease,
+        background-color 0.18s ease,
+        transform 0.18s ease !important;
+}
+
+
+.project-meta #projectLikeButton::before,
+.project-meta #projectLikeButton::after {
+    display: none !important;
+    content: none !important;
+}
+
+
+.project-meta #projectLikeButton:hover {
+    color: #ff7b72 !important;
+
+    background:
+        rgba(248, 81, 73, 0.08) !important;
+}
+
+
+.project-meta #projectLikeButton:active {
+    transform: scale(0.95) !important;
+}
+
+
+.project-meta #projectLikeButton:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+
+.project-meta #projectLikeButton:focus-visible {
+    outline:
+        1px solid
+        rgba(124, 92, 255, 0.65) !important;
+
+    outline-offset: 3px !important;
+}
+
+
+.project-meta #projectLikeButton.liked {
+    color: #ff7b72 !important;
+
+    background:
+        rgba(248, 81, 73, 0.07) !important;
+}
+
+
+.project-meta #projectLikeHeart {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+
+    display: inline-block !important;
+
+    width: auto !important;
+    min-width: 17px !important;
+    height: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border: 0 !important;
+    outline: 0 !important;
+
+    background: transparent !important;
+
+    color: inherit !important;
+
+    font-family:
+        Arial,
+        sans-serif !important;
+
+    font-size: 20px !important;
+    font-weight: 400 !important;
+    line-height: 1 !important;
+
+    text-align: center !important;
+
+    transform-origin: center !important;
+}
+
+
+.project-meta #projectLikeButton.liked
+#projectLikeHeart {
+    color: #f85149 !important;
+}
+
+
+.project-meta #projectLikes {
+    display: inline !important;
+
+    width: auto !important;
+    height: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border: 0 !important;
+
+    background: transparent !important;
+
+    color: inherit !important;
+
+    font-family: inherit !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    line-height: inherit !important;
+}
+
+
+/* Tim nảy */
+
+.project-meta
+#projectLikeHeart.heart-pop {
+    animation:
+        clean-heart-pop
+        0.45s
+        cubic-bezier(
+            0.17,
+            0.89,
+            0.32,
+            1.49
+        ) !important;
+}
+
+
+@keyframes clean-heart-pop {
+
+    0% {
+        transform: scale(1);
+    }
+
+    30% {
+        transform:
+            scale(0.75)
+            rotate(-7deg);
+    }
+
+    60% {
+        transform:
+            scale(1.5)
+            rotate(6deg);
+    }
+
+    100% {
+        transform:
+            scale(1)
+            rotate(0deg);
+    }
+}
