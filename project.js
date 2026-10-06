@@ -1,6 +1,6 @@
 // ======================================================
 // AI CODE HUB - PROJECT DETAIL
-// VIEW + PROFILE + OWNER EDIT / DELETE
+// LIKE + PROFILE + OWNER EDIT / DELETE + TOAST
 // ======================================================
 
 
@@ -22,7 +22,7 @@ const supabaseClient =
 
 
 // ======================================================
-// PROJECT MẪU
+// SAMPLE PROJECTS
 // ======================================================
 
 const sampleProjects = {
@@ -170,10 +170,7 @@ VERSION = "1.0.0"`
 
     <main class="hero">
         <h1>Hello, I'm Kira.</h1>
-
-        <p>
-            Designer & Developer
-        </p>
+        <p>Designer & Developer</p>
     </main>
 
 </body>
@@ -193,10 +190,8 @@ VERSION = "1.0.0"`
 
 .hero {
     min-height: 100vh;
-
     display: flex;
     flex-direction: column;
-
     align-items: center;
     justify-content: center;
 }`
@@ -211,9 +206,7 @@ VERSION = "1.0.0"`
 // ======================================================
 
 const urlParams =
-    new URLSearchParams(
-        window.location.search
-    );
+    new URLSearchParams(window.location.search);
 
 const sampleProjectID =
     urlParams.get("project");
@@ -223,7 +216,7 @@ const userProjectID =
 
 
 // ======================================================
-// HTML ELEMENTS
+// DOM
 // ======================================================
 
 const pageTitle =
@@ -247,6 +240,12 @@ const pageLikes =
 const pageViews =
     document.getElementById("projectViews");
 
+const projectLikeButton =
+    document.getElementById("projectLikeButton");
+
+const projectLikeHeart =
+    document.getElementById("projectLikeHeart");
+
 const fileList =
     document.querySelector(".file-list");
 
@@ -259,89 +258,50 @@ const currentFile =
 const copyCodeButton =
     document.getElementById("copyCodeButton");
 
-
-// ===== OWNER =====
-
 const projectOwnerActions =
-    document.getElementById(
-        "projectOwnerActions"
-    );
+    document.getElementById("projectOwnerActions");
 
 const editProjectButton =
-    document.getElementById(
-        "editProjectButton"
-    );
+    document.getElementById("editProjectButton");
 
 const deleteProjectButton =
-    document.getElementById(
-        "deleteProjectButton"
-    );
-
-
-// ===== EDIT PANEL =====
+    document.getElementById("deleteProjectButton");
 
 const projectEditPanel =
-    document.getElementById(
-        "projectEditPanel"
-    );
+    document.getElementById("projectEditPanel");
 
 const editProjectTitle =
-    document.getElementById(
-        "editProjectTitle"
-    );
+    document.getElementById("editProjectTitle");
 
 const editProjectDescription =
-    document.getElementById(
-        "editProjectDescription"
-    );
+    document.getElementById("editProjectDescription");
 
 const editProjectLanguage =
-    document.getElementById(
-        "editProjectLanguage"
-    );
+    document.getElementById("editProjectLanguage");
 
 const editProjectAI =
-    document.getElementById(
-        "editProjectAI"
-    );
+    document.getElementById("editProjectAI");
 
 const editProjectFiles =
-    document.getElementById(
-        "editProjectFiles"
-    );
+    document.getElementById("editProjectFiles");
 
 const editAddFileButton =
-    document.getElementById(
-        "editAddFileButton"
-    );
+    document.getElementById("editAddFileButton");
 
 const saveProjectButton =
-    document.getElementById(
-        "saveProjectButton"
-    );
+    document.getElementById("saveProjectButton");
 
 const cancelEditProjectButton =
-    document.getElementById(
-        "cancelEditProjectButton"
-    );
-
-
-// ===== DELETE MODAL =====
+    document.getElementById("cancelEditProjectButton");
 
 const deleteProjectModal =
-    document.getElementById(
-        "deleteProjectModal"
-    );
+    document.getElementById("deleteProjectModal");
 
 const cancelDeleteProjectButton =
-    document.getElementById(
-        "cancelDeleteProjectButton"
-    );
+    document.getElementById("cancelDeleteProjectButton");
 
 const confirmDeleteProjectButton =
-    document.getElementById(
-        "confirmDeleteProjectButton"
-    );
+    document.getElementById("confirmDeleteProjectButton");
 
 
 // ======================================================
@@ -356,6 +316,110 @@ let activeFileIndex = 0;
 
 let isDatabaseProject = false;
 
+let currentUserLiked = false;
+
+let likeBusy = false;
+
+
+// ======================================================
+// TOAST SYSTEM
+// ======================================================
+
+function ensureToastContainer() {
+
+    let container =
+        document.getElementById("toastContainer");
+
+    if (container) {
+        return container;
+    }
+
+    container =
+        document.createElement("div");
+
+    container.id =
+        "toastContainer";
+
+    container.className =
+        "toast-container";
+
+    document.body.appendChild(container);
+
+    return container;
+}
+
+
+function showToast(
+    message,
+    type = "info",
+    duration = 2800
+) {
+
+    const container =
+        ensureToastContainer();
+
+    const toast =
+        document.createElement("div");
+
+    toast.className =
+        `app-toast app-toast-${type}`;
+
+    const icon =
+        document.createElement("div");
+
+    icon.className =
+        "app-toast-icon";
+
+    if (type === "success") {
+        icon.textContent = "✓";
+    } else if (type === "error") {
+        icon.textContent = "!";
+    } else if (type === "warning") {
+        icon.textContent = "!";
+    } else {
+        icon.textContent = "i";
+    }
+
+    const text =
+        document.createElement("div");
+
+    text.className =
+        "app-toast-text";
+
+    text.textContent =
+        message;
+
+    toast.appendChild(icon);
+    toast.appendChild(text);
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+
+        toast.classList.add(
+            "app-toast-show"
+        );
+    });
+
+    setTimeout(() => {
+
+        toast.classList.remove(
+            "app-toast-show"
+        );
+
+        toast.classList.add(
+            "app-toast-hide"
+        );
+
+        setTimeout(() => {
+
+            toast.remove();
+
+        }, 350);
+
+    }, duration);
+}
+
 
 // ======================================================
 // NORMALIZE FILES
@@ -364,7 +428,6 @@ let isDatabaseProject = false;
 function normalizeFiles(codeValue) {
 
     let files = [];
-
 
     try {
 
@@ -385,36 +448,28 @@ function normalizeFiles(codeValue) {
         files = [
             {
                 name: "source.txt",
-                code: String(
-                    codeValue || ""
-                )
+                code: String(codeValue || "")
             }
         ];
     }
 
-
     if (!Array.isArray(files)) {
-
         files = [];
     }
 
-
     return files.map(
-        function (file, index) {
+        (file, index) => ({
+            name:
+                String(
+                    file?.name ||
+                    `file-${index + 1}.txt`
+                ),
 
-            return {
-                name:
-                    String(
-                        file?.name ||
-                        `file-${index + 1}.txt`
-                    ),
-
-                code:
-                    String(
-                        file?.code || ""
-                    )
-            };
-        }
+            code:
+                String(
+                    file?.code || ""
+                )
+        })
     );
 }
 
@@ -429,7 +484,6 @@ async function getProfileByUserID(userID) {
         return null;
     }
 
-
     const {
         data,
         error
@@ -442,7 +496,6 @@ async function getProfileByUserID(userID) {
             .eq("id", userID)
             .maybeSingle();
 
-
     if (error) {
 
         console.error(
@@ -452,46 +505,6 @@ async function getProfileByUserID(userID) {
 
         return null;
     }
-
-
-    return data || null;
-}
-
-
-// ======================================================
-// GET DATABASE PROJECT
-// ======================================================
-
-async function getSupabaseProject(
-    projectID
-) {
-
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-            .from("projects")
-            .select(
-                "id, user_id, title, description, language, ai, code, tags, created_at, likes, views"
-            )
-            .eq(
-                "id",
-                projectID
-            )
-            .maybeSingle();
-
-
-    if (error) {
-
-        console.error(
-            "Không thể tải project:",
-            error
-        );
-
-        return null;
-    }
-
 
     return data || null;
 }
@@ -510,11 +523,10 @@ async function loadCurrentUser() {
         await supabaseClient.auth
             .getSession();
 
-
     if (error) {
 
         console.error(
-            "Không thể lấy session:",
+            "Session error:",
             error
         );
 
@@ -523,31 +535,56 @@ async function loadCurrentUser() {
         return;
     }
 
-
     currentUser =
         data.session?.user || null;
 }
 
 
 // ======================================================
-// OWNER CHECK
+// DATABASE PROJECT
+// ======================================================
+
+async function getSupabaseProject(
+    projectID
+) {
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("projects")
+            .select(
+                "id, user_id, title, description, language, ai, code, tags, created_at, likes, views"
+            )
+            .eq("id", projectID)
+            .maybeSingle();
+
+    if (error) {
+
+        console.error(
+            "Project error:",
+            error
+        );
+
+        return null;
+    }
+
+    return data || null;
+}
+
+
+// ======================================================
+// OWNER
 // ======================================================
 
 function isProjectOwner() {
 
-    if (
-        !isDatabaseProject ||
-        !currentUser ||
-        !project
-    ) {
-
-        return false;
-    }
-
-
-    return (
-        currentUser.id ===
-        project.user_id
+    return Boolean(
+        isDatabaseProject &&
+        currentUser &&
+        project &&
+        currentUser.id === project.user_id
     );
 }
 
@@ -558,10 +595,368 @@ function updateOwnerControls() {
         return;
     }
 
-
     projectOwnerActions.hidden =
         !isProjectOwner();
 }
+
+
+// ======================================================
+// LIKE DATABASE
+// ======================================================
+
+async function getProjectLikeCount() {
+
+    if (
+        !isDatabaseProject ||
+        !project?.id
+    ) {
+        return project?.likes || 0;
+    }
+
+    const {
+        count,
+        error
+    } =
+        await supabaseClient
+            .from("project_likes")
+            .select(
+                "id",
+                {
+                    count: "exact",
+                    head: true
+                }
+            )
+            .eq(
+                "project_id",
+                project.id
+            );
+
+    if (error) {
+
+        console.error(
+            "Không thể đếm like:",
+            error
+        );
+
+        return 0;
+    }
+
+    return count || 0;
+}
+
+
+async function checkCurrentUserLike() {
+
+    currentUserLiked = false;
+
+    if (
+        !currentUser ||
+        !isDatabaseProject ||
+        !project?.id
+    ) {
+        return;
+    }
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("project_likes")
+            .select("id")
+            .eq(
+                "project_id",
+                project.id
+            )
+            .eq(
+                "user_id",
+                currentUser.id
+            )
+            .maybeSingle();
+
+    if (error) {
+
+        console.error(
+            "Không thể kiểm tra like:",
+            error
+        );
+
+        return;
+    }
+
+    currentUserLiked =
+        Boolean(data);
+}
+
+
+function updateLikeUI() {
+
+    if (!projectLikeButton) {
+        return;
+    }
+
+    if (!isDatabaseProject) {
+
+        projectLikeButton.classList
+            .add("sample-like");
+
+        projectLikeButton.classList
+            .remove("liked");
+
+        if (projectLikeHeart) {
+            projectLikeHeart.textContent =
+                "♥";
+        }
+
+        pageLikes.textContent =
+            `${project?.likes || 0} lượt thích`;
+
+        return;
+    }
+
+    projectLikeButton.classList
+        .remove("sample-like");
+
+    projectLikeButton.classList.toggle(
+        "liked",
+        currentUserLiked
+    );
+
+    if (projectLikeHeart) {
+
+        projectLikeHeart.textContent =
+            currentUserLiked
+                ? "♥"
+                : "♡";
+    }
+
+    pageLikes.textContent =
+        `${project?.likes || 0} lượt thích`;
+}
+
+
+function animateLikeHeart() {
+
+    if (!projectLikeHeart) {
+        return;
+    }
+
+    projectLikeHeart.classList.remove(
+        "heart-pop"
+    );
+
+    void projectLikeHeart.offsetWidth;
+
+    projectLikeHeart.classList.add(
+        "heart-pop"
+    );
+
+    setTimeout(() => {
+
+        projectLikeHeart.classList.remove(
+            "heart-pop"
+        );
+
+    }, 500);
+}
+
+
+async function loadLikeState() {
+
+    if (!isDatabaseProject) {
+
+        updateLikeUI();
+
+        return;
+    }
+
+    const [
+        likeCount
+    ] =
+        await Promise.all([
+            getProjectLikeCount(),
+            checkCurrentUserLike()
+        ]);
+
+    project.likes =
+        likeCount;
+
+    updateLikeUI();
+}
+
+
+// ======================================================
+// TOGGLE LIKE
+// ======================================================
+
+async function toggleProjectLike() {
+
+    if (!isDatabaseProject) {
+
+        showToast(
+            "Project mẫu không thể Like.",
+            "info"
+        );
+
+        return;
+    }
+
+    if (!currentUser) {
+
+        showToast(
+            "Đăng nhập để thích project này.",
+            "warning",
+            3200
+        );
+
+        setTimeout(() => {
+
+            window.location.href =
+                "login.html";
+
+        }, 1200);
+
+        return;
+    }
+
+    if (
+        likeBusy ||
+        !project?.id
+    ) {
+        return;
+    }
+
+    likeBusy = true;
+
+    projectLikeButton.disabled =
+        true;
+
+    try {
+
+        if (currentUserLiked) {
+
+            const {
+                error
+            } =
+                await supabaseClient
+                    .from("project_likes")
+                    .delete()
+                    .eq(
+                        "project_id",
+                        project.id
+                    )
+                    .eq(
+                        "user_id",
+                        currentUser.id
+                    );
+
+            if (error) {
+                throw error;
+            }
+
+            currentUserLiked = false;
+
+            project.likes =
+                Math.max(
+                    0,
+                    Number(project.likes) - 1
+                );
+
+            updateLikeUI();
+
+            animateLikeHeart();
+
+            showToast(
+                "Đã bỏ thích project.",
+                "info",
+                1800
+            );
+
+        } else {
+
+            const {
+                error
+            } =
+                await supabaseClient
+                    .from("project_likes")
+                    .insert({
+                        project_id:
+                            project.id,
+
+                        user_id:
+                            currentUser.id
+                    });
+
+            if (error) {
+
+                if (
+                    error.code === "23505"
+                ) {
+
+                    currentUserLiked =
+                        true;
+
+                    project.likes =
+                        await getProjectLikeCount();
+
+                    updateLikeUI();
+
+                    return;
+                }
+
+                throw error;
+            }
+
+            currentUserLiked = true;
+
+            project.likes =
+                Number(project.likes) + 1;
+
+            updateLikeUI();
+
+            animateLikeHeart();
+
+            showToast(
+                "Đã thích project ❤️",
+                "success",
+                1800
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Like error:",
+            error
+        );
+
+        showToast(
+            "Không thể cập nhật lượt thích.",
+            "error"
+        );
+
+        project.likes =
+            await getProjectLikeCount();
+
+        await checkCurrentUserLike();
+
+        updateLikeUI();
+
+    } finally {
+
+        likeBusy = false;
+
+        projectLikeButton.disabled =
+            false;
+    }
+}
+
+
+projectLikeButton
+    ?.addEventListener(
+        "click",
+        toggleProjectLike
+    );
 
 
 // ======================================================
@@ -575,7 +970,6 @@ function getFileIcon(fileName) {
             .split(".")
             .pop()
             .toLowerCase();
-
 
     if (extension === "html") {
         return "◇";
@@ -620,7 +1014,6 @@ function getFileIcon(fileName) {
         return "RS";
     }
 
-
     return "•";
 }
 
@@ -632,13 +1025,10 @@ function getFileIcon(fileName) {
 function createFileList() {
 
     fileList.innerHTML = `
-
         <div class="file-list-title">
             FILES
         </div>
-
     `;
-
 
     if (
         !project.files ||
@@ -646,9 +1036,7 @@ function createFileList() {
     ) {
 
         const empty =
-            document.createElement(
-                "div"
-            );
+            document.createElement("div");
 
         empty.textContent =
             "Không có file";
@@ -659,51 +1047,37 @@ function createFileList() {
         empty.style.color =
             "#8b949e";
 
-        fileList.appendChild(
-            empty
-        );
+        fileList.appendChild(empty);
 
         return;
     }
 
-
     project.files.forEach(
-        function (file, index) {
+        (file, index) => {
 
             const button =
                 document.createElement(
                     "button"
                 );
 
-
             button.type =
                 "button";
-
 
             button.className =
                 "file-button";
 
-
             button.dataset.index =
                 String(index);
 
-
             button.textContent =
-                getFileIcon(
-                    file.name
-                ) +
+                getFileIcon(file.name) +
                 " " +
                 file.name;
 
-
             button.addEventListener(
                 "click",
-                function () {
-
-                    showFile(index);
-                }
+                () => showFile(index)
             );
-
 
             fileList.appendChild(
                 button
@@ -724,53 +1098,40 @@ function showFile(index) {
         !project.files ||
         !project.files[index]
     ) {
-
         return;
     }
-
 
     activeFileIndex =
         index;
 
-
     const file =
         project.files[index];
-
 
     currentFile.textContent =
         file.name;
 
-
     codeContent.textContent =
         file.code;
-
 
     document
         .querySelectorAll(
             ".file-button"
         )
-        .forEach(
-            function (button) {
+        .forEach(button => {
 
-                button.classList.remove(
-                    "active"
-                );
-            }
-        );
-
+            button.classList.remove(
+                "active"
+            );
+        });
 
     const activeButton =
         document.querySelector(
             `.file-button[data-index="${index}"]`
         );
 
-
-    if (activeButton) {
-
-        activeButton.classList.add(
-            "active"
-        );
-    }
+    activeButton?.classList.add(
+        "active"
+    );
 }
 
 
@@ -784,47 +1145,33 @@ function renderProject() {
         return;
     }
 
-
     document.title =
         project.title +
         " - AI Code Hub";
 
-
     pageTitle.textContent =
         project.title;
-
 
     pageLanguage.textContent =
         project.language;
 
-
     pageAI.textContent =
         project.ai;
-
 
     pageDescription.textContent =
         project.description;
 
-
     pageAuthor.textContent =
-        "👤 " +
-        project.author;
-
-
-    pageLikes.textContent =
-        "♥ " +
-        project.likes +
-        " lượt thích";
-
+        "👤 " + project.author;
 
     pageViews.textContent =
         "👁 " +
         project.views +
         " lượt xem";
 
+    updateLikeUI();
 
     createFileList();
-
 
     if (
         project.files &&
@@ -835,14 +1182,10 @@ function renderProject() {
             activeFileIndex >=
             project.files.length
         ) {
-
             activeFileIndex = 0;
         }
 
-
-        showFile(
-            activeFileIndex
-        );
+        showFile(activeFileIndex);
 
     } else {
 
@@ -852,7 +1195,6 @@ function renderProject() {
         codeContent.textContent =
             "";
     }
-
 
     updateOwnerControls();
 }
@@ -880,7 +1222,12 @@ function showLoading() {
         "👤 ...";
 
     pageLikes.textContent =
-        "♥ ...";
+        "...";
+
+    if (projectLikeHeart) {
+        projectLikeHeart.textContent =
+            "♡";
+    }
 
     pageViews.textContent =
         "👁 ...";
@@ -891,9 +1238,7 @@ function showLoading() {
     codeContent.textContent =
         "";
 
-
     if (projectOwnerActions) {
-
         projectOwnerActions.hidden =
             true;
     }
@@ -909,45 +1254,44 @@ function showNotFound() {
     document.title =
         "Không tìm thấy project - AI Code Hub";
 
-
     pageTitle.textContent =
         "Không tìm thấy project";
-
 
     pageLanguage.textContent =
         "—";
 
-
     pageAI.textContent =
         "—";
-
 
     pageDescription.textContent =
         "Project này không tồn tại hoặc đã bị xóa.";
 
-
     pageAuthor.textContent =
         "👤 —";
 
-
     pageLikes.textContent =
-        "♥ 0 lượt thích";
+        "0 lượt thích";
 
+    if (projectLikeHeart) {
+        projectLikeHeart.textContent =
+            "♡";
+    }
+
+    if (projectLikeButton) {
+        projectLikeButton.disabled =
+            true;
+    }
 
     pageViews.textContent =
         "👁 0 lượt xem";
 
-
     currentFile.textContent =
         "Không có file";
-
 
     codeContent.textContent =
         "";
 
-
     fileList.innerHTML = `
-
         <div class="file-list-title">
             FILES
         </div>
@@ -960,12 +1304,9 @@ function showNotFound() {
         >
             Không có file
         </div>
-
     `;
 
-
     if (projectOwnerActions) {
-
         projectOwnerActions.hidden =
             true;
     }
@@ -976,76 +1317,71 @@ function showNotFound() {
 // COPY CODE
 // ======================================================
 
-copyCodeButton?.addEventListener(
-    "click",
-    async function () {
+copyCodeButton
+    ?.addEventListener(
+        "click",
+        async function () {
 
-        const file =
-            project?.files?.[
-                activeFileIndex
-            ];
+            const file =
+                project?.files?.[
+                    activeFileIndex
+                ];
 
+            if (!file) {
+                return;
+            }
 
-        if (!file) {
-            return;
-        }
+            try {
 
+                await navigator.clipboard
+                    .writeText(
+                        file.code
+                    );
 
-        try {
+            } catch (error) {
 
-            await navigator.clipboard
-                .writeText(
-                    file.code
+                const textarea =
+                    document.createElement(
+                        "textarea"
+                    );
+
+                textarea.value =
+                    file.code;
+
+                document.body.appendChild(
+                    textarea
                 );
 
+                textarea.select();
 
-        } catch (error) {
-
-            const textarea =
-                document.createElement(
-                    "textarea"
+                document.execCommand(
+                    "copy"
                 );
 
+                textarea.remove();
+            }
 
-            textarea.value =
-                file.code;
+            copyCodeButton.textContent =
+                "✓ Đã copy";
 
-
-            document.body.appendChild(
-                textarea
+            showToast(
+                "Đã copy source code.",
+                "success",
+                1500
             );
 
-
-            textarea.select();
-
-
-            document.execCommand(
-                "copy"
-            );
-
-
-            textarea.remove();
-        }
-
-
-        copyCodeButton.textContent =
-            "✓ Đã copy";
-
-
-        setTimeout(
-            function () {
+            setTimeout(() => {
 
                 copyCodeButton.textContent =
                     "Copy Code";
-            },
-            1500
-        );
-    }
-);
+
+            }, 1500);
+        }
+    );
 
 
 // ======================================================
-// EDITOR - CREATE FILE BOX
+// EDIT FILE BOX
 // ======================================================
 
 function createEditFileBox(
@@ -1056,82 +1392,57 @@ function createEditFileBox(
 ) {
 
     const wrapper =
-        document.createElement(
-            "div"
-        );
-
+        document.createElement("div");
 
     wrapper.className =
         "project-edit-file";
 
-
     const header =
-        document.createElement(
-            "div"
-        );
-
+        document.createElement("div");
 
     header.className =
         "project-edit-file-header";
 
-
     const nameInput =
-        document.createElement(
-            "input"
-        );
-
+        document.createElement("input");
 
     nameInput.type =
         "text";
 
-
     nameInput.className =
         "project-edit-file-name";
-
 
     nameInput.placeholder =
         "Tên file, ví dụ: script.js";
 
-
     nameInput.value =
         file.name || "";
 
-
     const removeButton =
-        document.createElement(
-            "button"
-        );
-
+        document.createElement("button");
 
     removeButton.type =
         "button";
 
-
     removeButton.className =
         "project-edit-remove-file";
 
-
     removeButton.textContent =
         "Xóa file";
-
 
     const codeInput =
         document.createElement(
             "textarea"
         );
 
-
     codeInput.className =
         "project-edit-file-code";
-
 
     codeInput.placeholder =
         "Dán source code vào đây...";
 
-
     codeInput.value =
         file.code || "";
-
 
     removeButton.addEventListener(
         "click",
@@ -1143,41 +1454,45 @@ function createEditFileBox(
                         ".project-edit-file"
                     );
 
+            if (
+                allFiles.length <= 1
+            ) {
 
-            if (allFiles.length <= 1) {
-
-                alert(
-                    "Project phải có ít nhất 1 file."
+                showToast(
+                    "Project phải có ít nhất 1 file.",
+                    "warning"
                 );
 
                 return;
             }
 
+            wrapper.classList.add(
+                "edit-file-removing"
+            );
 
-            wrapper.remove();
+            setTimeout(() => {
+
+                wrapper.remove();
+
+            }, 180);
         }
     );
-
 
     header.appendChild(
         nameInput
     );
 
-
     header.appendChild(
         removeButton
     );
-
 
     wrapper.appendChild(
         header
     );
 
-
     wrapper.appendChild(
         codeInput
     );
-
 
     editProjectFiles.appendChild(
         wrapper
@@ -1186,78 +1501,7 @@ function createEditFileBox(
 
 
 // ======================================================
-// OPEN EDIT MODE
-// ======================================================
-
-function openEditProject() {
-
-    if (!isProjectOwner()) {
-
-        alert(
-            "Bạn không có quyền sửa project này."
-        );
-
-        return;
-    }
-
-
-    editProjectTitle.value =
-        project.title;
-
-
-    editProjectDescription.value =
-        project.description;
-
-
-    setSelectValue(
-        editProjectLanguage,
-        project.language
-    );
-
-
-    setSelectValue(
-        editProjectAI,
-        project.ai
-    );
-
-
-    editProjectFiles.innerHTML =
-        "";
-
-
-    project.files.forEach(
-        function (file) {
-
-            createEditFileBox(
-                file
-            );
-        }
-    );
-
-
-    if (
-        project.files.length === 0
-    ) {
-
-        createEditFileBox();
-    }
-
-
-    projectEditPanel.hidden =
-        false;
-
-
-    projectEditPanel.scrollIntoView(
-        {
-            behavior: "smooth",
-            block: "start"
-        }
-    );
-}
-
-
-// ======================================================
-// SET SELECT VALUE
+// SELECT VALUE
 // ======================================================
 
 function setSelectValue(
@@ -1269,15 +1513,9 @@ function setSelectValue(
         Array.from(
             select.options
         ).some(
-            function (option) {
-
-                return (
-                    option.value ===
-                    value
-                );
-            }
+            option =>
+                option.value === value
         );
-
 
     select.value =
         exists
@@ -1287,10 +1525,77 @@ function setSelectValue(
 
 
 // ======================================================
-// CLOSE EDIT MODE
+// OPEN EDIT
+// ======================================================
+
+function openEditProject() {
+
+    if (!isProjectOwner()) {
+
+        showToast(
+            "Bạn không có quyền sửa project này.",
+            "error"
+        );
+
+        return;
+    }
+
+    editProjectTitle.value =
+        project.title;
+
+    editProjectDescription.value =
+        project.description;
+
+    setSelectValue(
+        editProjectLanguage,
+        project.language
+    );
+
+    setSelectValue(
+        editProjectAI,
+        project.ai
+    );
+
+    editProjectFiles.innerHTML =
+        "";
+
+    project.files.forEach(
+        file =>
+            createEditFileBox(file)
+    );
+
+    if (
+        project.files.length === 0
+    ) {
+        createEditFileBox();
+    }
+
+    projectEditPanel.hidden =
+        false;
+
+    requestAnimationFrame(() => {
+
+        projectEditPanel.classList.add(
+            "edit-panel-open"
+        );
+    });
+
+    projectEditPanel.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+
+// ======================================================
+// CLOSE EDIT
 // ======================================================
 
 function closeEditProject() {
+
+    projectEditPanel.classList.remove(
+        "edit-panel-open"
+    );
 
     projectEditPanel.hidden =
         true;
@@ -1298,7 +1603,7 @@ function closeEditProject() {
 
 
 // ======================================================
-// COLLECT EDIT FILES
+// COLLECT FILES
 // ======================================================
 
 function collectEditedFiles() {
@@ -1309,54 +1614,43 @@ function collectEditedFiles() {
                 ".project-edit-file"
             );
 
-
     const files = [];
 
+    boxes.forEach(box => {
 
-    boxes.forEach(
-        function (box) {
+        const name =
+            box
+                .querySelector(
+                    ".project-edit-file-name"
+                )
+                .value
+                .trim();
 
-            const name =
-                box
-                    .querySelector(
-                        ".project-edit-file-name"
-                    )
-                    .value
-                    .trim();
+        const code =
+            box
+                .querySelector(
+                    ".project-edit-file-code"
+                )
+                .value;
 
+        if (
+            name ||
+            code.trim()
+        ) {
 
-            const code =
-                box
-                    .querySelector(
-                        ".project-edit-file-code"
-                    )
-                    .value;
+            files.push({
+                name:
+                    name ||
+                    "untitled.txt",
 
-
-            if (
-                name ||
-                code.trim()
-            ) {
-
-                files.push({
-                    name:
-                        name ||
-                        "untitled.txt",
-
-                    code
-                });
-            }
+                code
+            });
         }
-    );
-
+    });
 
     return files;
 }
 
-
-// ======================================================
-// VALIDATE DUPLICATE FILE NAMES
-// ======================================================
 
 function hasDuplicateFileNames(
     files
@@ -1364,14 +1658,11 @@ function hasDuplicateFileNames(
 
     const names =
         files.map(
-            function (file) {
-
-                return file.name
+            file =>
+                file.name
                     .trim()
-                    .toLowerCase();
-            }
+                    .toLowerCase()
         );
-
 
     return (
         new Set(names).size !==
@@ -1388,40 +1679,36 @@ async function saveProjectChanges() {
 
     if (!isProjectOwner()) {
 
-        alert(
-            "Bạn không có quyền sửa project này."
+        showToast(
+            "Bạn không có quyền sửa project này.",
+            "error"
         );
 
         return;
     }
 
-
     const title =
         editProjectTitle.value
             .trim();
-
 
     const description =
         editProjectDescription.value
             .trim();
 
-
     const language =
         editProjectLanguage.value;
-
 
     const ai =
         editProjectAI.value;
 
-
     const files =
         collectEditedFiles();
 
-
     if (!title) {
 
-        alert(
-            "Hãy nhập tên project."
+        showToast(
+            "Hãy nhập tên project.",
+            "warning"
         );
 
         editProjectTitle.focus();
@@ -1429,11 +1716,11 @@ async function saveProjectChanges() {
         return;
     }
 
-
     if (!description) {
 
-        alert(
-            "Hãy nhập mô tả project."
+        showToast(
+            "Hãy nhập mô tả project.",
+            "warning"
         );
 
         editProjectDescription.focus();
@@ -1441,40 +1728,38 @@ async function saveProjectChanges() {
         return;
     }
 
+    if (
+        files.length === 0
+    ) {
 
-    if (files.length === 0) {
-
-        alert(
-            "Project phải có ít nhất 1 file."
+        showToast(
+            "Project phải có ít nhất 1 file.",
+            "warning"
         );
 
         return;
     }
-
 
     if (
         hasDuplicateFileNames(files)
     ) {
 
-        alert(
-            "Không thể có hai file trùng tên."
+        showToast(
+            "Không thể có hai file trùng tên.",
+            "warning"
         );
 
         return;
     }
 
-
     const oldText =
         saveProjectButton.textContent;
-
 
     saveProjectButton.disabled =
         true;
 
-
-    saveProjectButton.textContent =
-        "Đang lưu...";
-
+    saveProjectButton.innerHTML =
+        `<span class="button-spinner"></span> Đang lưu...`;
 
     try {
 
@@ -1505,89 +1790,76 @@ async function saveProjectChanges() {
                 .select()
                 .maybeSingle();
 
-
         if (error) {
-
-            console.error(
-                "Lỗi cập nhật project:",
-                error
-            );
-
-
-            alert(
-                "Không thể lưu project:\n" +
-                error.message
-            );
-
-            return;
+            throw error;
         }
-
 
         if (!data) {
 
-            alert(
-                "Không thể cập nhật project. " +
-                "Hãy kiểm tra quyền tài khoản."
+            throw new Error(
+                "Không thể cập nhật project."
             );
-
-            return;
         }
-
 
         project.title =
             data.title;
 
-
         project.description =
             data.description;
-
 
         project.language =
             data.language;
 
-
         project.ai =
             data.ai;
-
 
         project.files =
             normalizeFiles(
                 data.code
             );
 
-
         activeFileIndex = 0;
-
-
-        closeEditProject();
-
 
         renderProject();
 
+        saveProjectButton.innerHTML =
+            "✓ Đã lưu";
 
-        alert(
-            "Đã lưu thay đổi thành công!"
+        showToast(
+            "Đã lưu thay đổi thành công.",
+            "success"
         );
 
+        setTimeout(() => {
+
+            closeEditProject();
+
+        }, 450);
 
     } catch (error) {
 
-        console.error(error);
-
-
-        alert(
-            "Có lỗi xảy ra khi lưu project."
+        console.error(
+            "Save error:",
+            error
         );
 
+        showToast(
+            error.message ||
+            "Không thể lưu project.",
+            "error"
+        );
 
     } finally {
 
-        saveProjectButton.disabled =
-            false;
+        setTimeout(() => {
 
+            saveProjectButton.disabled =
+                false;
 
-        saveProjectButton.textContent =
-            oldText;
+            saveProjectButton.textContent =
+                oldText;
+
+        }, 600);
     }
 }
 
@@ -1600,28 +1872,37 @@ function openDeleteModal() {
 
     if (!isProjectOwner()) {
 
-        alert(
-            "Bạn không có quyền xóa project này."
+        showToast(
+            "Bạn không có quyền xóa project này.",
+            "error"
         );
 
         return;
     }
 
-
     deleteProjectModal.hidden =
         false;
 
-
     document.body.style.overflow =
         "hidden";
+
+    requestAnimationFrame(() => {
+
+        deleteProjectModal.classList.add(
+            "delete-modal-open"
+        );
+    });
 }
 
 
 function closeDeleteModal() {
 
+    deleteProjectModal.classList.remove(
+        "delete-modal-open"
+    );
+
     deleteProjectModal.hidden =
         true;
-
 
     document.body.style.overflow =
         "";
@@ -1636,27 +1917,23 @@ async function deleteProject() {
 
     if (!isProjectOwner()) {
 
-        alert(
-            "Bạn không có quyền xóa project này."
+        showToast(
+            "Bạn không có quyền xóa project này.",
+            "error"
         );
 
         return;
     }
 
-
     const oldText =
         confirmDeleteProjectButton
             .textContent;
 
+    confirmDeleteProjectButton.disabled =
+        true;
 
-    confirmDeleteProjectButton
-        .disabled = true;
-
-
-    confirmDeleteProjectButton
-        .textContent =
-            "Đang xóa...";
-
+    confirmDeleteProjectButton.innerHTML =
+        `<span class="button-spinner"></span> Đang xóa...`;
 
     try {
 
@@ -1677,85 +1954,84 @@ async function deleteProject() {
                 )
                 .select("id");
 
-
         if (error) {
-
-            console.error(
-                "Lỗi xóa project:",
-                error
-            );
-
-
-            alert(
-                "Không thể xóa project:\n" +
-                error.message
-            );
-
-            return;
+            throw error;
         }
-
 
         if (
             !data ||
             data.length === 0
         ) {
 
-            alert(
-                "Project không được xóa. " +
-                "Hãy kiểm tra quyền tài khoản."
+            throw new Error(
+                "Project không được xóa."
             );
-
-            return;
         }
 
+        confirmDeleteProjectButton
+            .innerHTML =
+                "✓ Đã xóa";
 
-        alert(
-            "Đã xóa project."
+        showToast(
+            "Đã xóa project.",
+            "success",
+            1800
         );
 
+        const dialog =
+            deleteProjectModal
+                .querySelector(
+                    ".delete-project-dialog"
+                );
 
-        window.location.href =
-            "index.html";
+        dialog?.classList.add(
+            "project-delete-success"
+        );
 
+        setTimeout(() => {
+
+            window.location.href =
+                "index.html";
+
+        }, 900);
 
     } catch (error) {
 
-        console.error(error);
-
-
-        alert(
-            "Có lỗi xảy ra khi xóa project."
+        console.error(
+            "Delete error:",
+            error
         );
 
-
-    } finally {
+        showToast(
+            error.message ||
+            "Không thể xóa project.",
+            "error"
+        );
 
         confirmDeleteProjectButton
             .disabled = false;
 
-
         confirmDeleteProjectButton
-            .textContent =
-                oldText;
+            .textContent = oldText;
     }
 }
 
 
 // ======================================================
-// OWNER BUTTON EVENTS
+// EVENTS
 // ======================================================
 
-editProjectButton?.addEventListener(
-    "click",
-    openEditProject
-);
+editProjectButton
+    ?.addEventListener(
+        "click",
+        openEditProject
+    );
 
-
-deleteProjectButton?.addEventListener(
-    "click",
-    openDeleteModal
-);
-
+deleteProjectButton
+    ?.addEventListener(
+        "click",
+        openDeleteModal
+    );
 
 cancelEditProjectButton
     ?.addEventListener(
@@ -1763,13 +2039,11 @@ cancelEditProjectButton
         closeEditProject
     );
 
-
 saveProjectButton
     ?.addEventListener(
         "click",
         saveProjectChanges
     );
-
 
 editAddFileButton
     ?.addEventListener(
@@ -1781,23 +2055,27 @@ editAddFileButton
                 code: ""
             });
 
-
             const boxes =
                 editProjectFiles
                     .querySelectorAll(
                         ".project-edit-file"
                     );
 
+            const last =
+                boxes[
+                    boxes.length - 1
+                ];
 
-            boxes[
-                boxes.length - 1
-            ]?.scrollIntoView({
+            last?.classList.add(
+                "edit-file-added"
+            );
+
+            last?.scrollIntoView({
                 behavior: "smooth",
                 block: "center"
             });
         }
     );
-
 
 cancelDeleteProjectButton
     ?.addEventListener(
@@ -1805,15 +2083,11 @@ cancelDeleteProjectButton
         closeDeleteModal
     );
 
-
 confirmDeleteProjectButton
     ?.addEventListener(
         "click",
         deleteProject
     );
-
-
-// Click nền tối -> đóng modal
 
 deleteProjectModal
     ?.querySelector(
@@ -1823,9 +2097,6 @@ deleteProjectModal
         "click",
         closeDeleteModal
     );
-
-
-// ESC -> đóng modal
 
 document.addEventListener(
     "keydown",
@@ -1854,7 +2125,6 @@ async function loadDatabaseProject() {
             userProjectID
         );
 
-
     if (!databaseProject) {
 
         showNotFound();
@@ -1862,12 +2132,10 @@ async function loadDatabaseProject() {
         return;
     }
 
-
     const ownerProfile =
         await getProfileByUserID(
             databaseProject.user_id
         );
-
 
     project = {
 
@@ -1897,11 +2165,7 @@ async function loadDatabaseProject() {
             ownerProfile?.username ||
             "Cộng đồng",
 
-        likes:
-            Number(
-                databaseProject.likes ||
-                0
-            ),
+        likes: 0,
 
         views:
             Number(
@@ -1915,15 +2179,15 @@ async function loadDatabaseProject() {
             )
     };
 
-
     isDatabaseProject =
         true;
 
-
-    activeFileIndex = 0;
-
+    activeFileIndex =
+        0;
 
     renderProject();
+
+    await loadLikeState();
 }
 
 
@@ -1939,31 +2203,54 @@ function loadSampleProject() {
         ] ||
         sampleProjects.minecraft;
 
-
     project = {
+
         ...selected,
 
         files:
             selected.files.map(
-                function (file) {
-
-                    return {
-                        ...file
-                    };
-                }
+                file => ({
+                    ...file
+                })
             )
     };
-
 
     isDatabaseProject =
         false;
 
-
-    activeFileIndex = 0;
-
+    activeFileIndex =
+        0;
 
     renderProject();
 }
+
+
+// ======================================================
+// AUTH CHANGE
+// ======================================================
+
+supabaseClient.auth.onAuthStateChange(
+    async (
+        event,
+        session
+    ) => {
+
+        currentUser =
+            session?.user || null;
+
+        updateOwnerControls();
+
+        if (
+            isDatabaseProject &&
+            project
+        ) {
+
+            await checkCurrentUserLike();
+
+            updateLikeUI();
+        }
+    }
+);
 
 
 // ======================================================
@@ -1974,12 +2261,7 @@ async function initializeProjectPage() {
 
     showLoading();
 
-
-    // Phải lấy session trước để biết
-    // người đang xem có phải chủ bài hay không.
-
     await loadCurrentUser();
-
 
     if (userProjectID) {
 
@@ -1987,7 +2269,6 @@ async function initializeProjectPage() {
 
         return;
     }
-
 
     loadSampleProject();
 }
