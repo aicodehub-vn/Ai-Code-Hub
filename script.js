@@ -834,4 +834,6 @@ projectGrid.addEventListener(
 
 loadSavedProjects();
 
+console.log("AI CODE HUB script.js đã chạy");
+
 checkAuthSession();
