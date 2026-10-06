@@ -638,6 +638,10 @@ async function loadProjectsFromSupabase() {
 
     try {
 
+        // ==================================================
+        // 1. LẤY PROJECT
+        // ==================================================
+
         const {
             data,
             error
@@ -673,8 +677,73 @@ async function loadProjectsFromSupabase() {
             data || [];
 
 
+        // ==================================================
+        // 2. LẤY TOÀN BỘ LIKE THẬT
+        // ==================================================
+
+        const {
+            data: likeRows,
+            error: likeError
+        } =
+            await supabaseClient
+                .from("project_likes")
+                .select("project_id");
+
+
+        if (likeError) {
+
+            console.error(
+                "Không thể tải lượt thích:",
+                likeError
+            );
+        }
+
+
+        // ==================================================
+        // 3. ĐẾM LIKE THEO TỪNG PROJECT
+        // ==================================================
+
+        const likeCountByProject = {};
+
+
+        (likeRows || []).forEach(
+            function (row) {
+
+                const projectID =
+                    row.project_id;
+
+
+                if (
+                    likeCountByProject[
+                        projectID
+                    ] === undefined
+                ) {
+
+                    likeCountByProject[
+                        projectID
+                    ] = 0;
+                }
+
+
+                likeCountByProject[
+                    projectID
+                ]++;
+            }
+        );
+
+
+        // ==================================================
+        // 4. GÁN LIKE THẬT VÀO PROJECT
+        // ==================================================
+
         databaseProjects.forEach(
             function (project) {
+
+                project.likes =
+                    likeCountByProject[
+                        project.id
+                    ] || 0;
+
 
                 createUserProjectCard(
                     project
@@ -686,6 +755,12 @@ async function loadProjectsFromSupabase() {
         console.log(
             "Đã tải project:",
             databaseProjects.length
+        );
+
+
+        console.log(
+            "Like thật:",
+            likeCountByProject
         );
 
 

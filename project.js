@@ -246,6 +246,22 @@ const projectLikeButton =
 const projectLikeHeart =
     document.getElementById("projectLikeHeart");
 
+    // ======================================================
+// PROJECT NAVBAR - AUTH
+// ======================================================
+
+const projectLoginButton =
+    document.getElementById("projectLoginButton");
+
+const projectUserArea =
+    document.getElementById("projectUserArea");
+
+const projectUserButton =
+    document.getElementById("projectUserButton");
+
+const projectLogoutButton =
+    document.getElementById("projectLogoutButton");
+
 const fileList =
     document.querySelector(".file-list");
 
@@ -537,6 +553,161 @@ async function loadCurrentUser() {
 
     currentUser =
         data.session?.user || null;
+}
+
+// ======================================================
+// PROJECT NAVBAR - UPDATE AUTH UI
+// ======================================================
+
+async function updateProjectAuthUI() {
+
+    // ===== CHƯA ĐĂNG NHẬP =====
+
+    if (!currentUser) {
+
+        if (projectLoginButton) {
+            projectLoginButton.style.display =
+                "inline-flex";
+        }
+
+        if (projectUserArea) {
+            projectUserArea.style.display =
+                "none";
+        }
+
+        return;
+    }
+
+
+    // ===== ĐÃ ĐĂNG NHẬP =====
+
+    if (projectLoginButton) {
+        projectLoginButton.style.display =
+            "none";
+    }
+
+    if (projectUserArea) {
+        projectUserArea.style.display =
+            "flex";
+    }
+
+
+    // Tên mặc định lấy từ tài khoản Supabase
+    let displayName =
+        currentUser.user_metadata?.display_name ||
+        currentUser.email?.split("@")[0] ||
+        "Tài khoản";
+
+
+    // Ưu tiên username trong bảng profiles
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("profiles")
+                .select("username")
+                .eq("id", currentUser.id)
+                .maybeSingle();
+
+
+        if (
+            !error &&
+            data?.username
+        ) {
+
+            displayName =
+                data.username;
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Không thể tải username:",
+            error
+        );
+    }
+
+
+    if (projectUserButton) {
+
+        projectUserButton.textContent =
+            "👤 " + displayName;
+    }
+}
+
+
+// ======================================================
+// PROJECT NAVBAR - LOGOUT
+// ======================================================
+
+if (projectLogoutButton) {
+
+    projectLogoutButton.addEventListener(
+        "click",
+        async function () {
+
+            const oldText =
+                projectLogoutButton.textContent;
+
+
+            projectLogoutButton.disabled =
+                true;
+
+            projectLogoutButton.textContent =
+                "Đang đăng xuất...";
+
+
+            try {
+
+                const {
+                    error
+                } =
+                    await supabaseClient.auth
+                        .signOut();
+
+
+                if (error) {
+                    throw error;
+                }
+
+
+                currentUser = null;
+
+                await updateProjectAuthUI();
+
+                updateOwnerControls();
+
+                await checkCurrentUserLike();
+
+                updateLikeUI();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Lỗi đăng xuất:",
+                    error
+                );
+
+                alert(
+                    "Không thể đăng xuất."
+                );
+
+
+            } finally {
+
+                projectLogoutButton.disabled =
+                    false;
+
+                projectLogoutButton.textContent =
+                    oldText;
+            }
+        }
+    );
 }
 
 
@@ -2118,6 +2289,76 @@ document.addEventListener(
 // LOAD DATABASE PROJECT
 // ======================================================
 
+
+
+// ======================================================
+// TĂNG LƯỢT XEM PROJECT
+// ======================================================
+
+async function registerProjectView() {
+
+    if (
+        !isDatabaseProject ||
+        !project ||
+        !project.id
+    ) {
+        return;
+    }
+
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient.rpc(
+                "increment_project_views",
+                {
+                    p_project_id: project.id
+                }
+            );
+
+
+        if (error) {
+
+            console.error(
+                "Không thể tăng lượt xem:",
+                error
+            );
+
+            return;
+        }
+
+
+        // Cập nhật số view mới ngay trên trang
+        project.views =
+            Number(data || 0);
+
+
+        if (pageViews) {
+
+            pageViews.textContent =
+                "👁 " +
+                project.views +
+                " lượt xem";
+        }
+
+
+        console.log(
+            "Lượt xem hiện tại:",
+            project.views
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Lỗi khi tăng lượt xem:",
+            error
+        );
+    }
+}
 async function loadDatabaseProject() {
 
     const databaseProject =
@@ -2186,6 +2427,8 @@ async function loadDatabaseProject() {
         0;
 
     renderProject();
+
+    await registerProjectView();
 
     await loadLikeState();
 }
@@ -2262,6 +2505,8 @@ async function initializeProjectPage() {
     showLoading();
 
     await loadCurrentUser();
+
+    await updateProjectAuthUI();
 
     if (userProjectID) {
 
