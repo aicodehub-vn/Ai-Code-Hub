@@ -3162,3 +3162,198 @@ body {
             rotate(0deg);
     }
 }
+/* =====================================================
+   LIKE BUTTON V2 - MORE VISIBLE
+   ===================================================== */
+
+.project-meta #projectLikeButton {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    gap: 7px !important;
+
+    min-height: 30px !important;
+
+    padding: 5px 10px !important;
+
+    margin: -5px 0 !important;
+
+    border: 1px solid #30363d !important;
+    border-radius: 8px !important;
+
+    background: #161b22 !important;
+
+    color: #8b949e !important;
+
+    box-shadow: none !important;
+
+    font-family: inherit !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+
+    cursor: pointer !important;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.15s ease !important;
+}
+
+
+/* Tim */
+
+.project-meta #projectLikeHeart {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    min-width: 18px !important;
+
+    color: #8b949e !important;
+
+    font-size: 19px !important;
+    line-height: 1 !important;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease !important;
+}
+
+
+/* Chưa like - hover */
+
+.project-meta #projectLikeButton:hover {
+    color: #ff7b72 !important;
+
+    border-color:
+        rgba(248, 81, 73, 0.55) !important;
+
+    background:
+        rgba(248, 81, 73, 0.08) !important;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(248, 81, 73, 0.06) !important;
+
+    transform:
+        translateY(-1px) !important;
+}
+
+
+.project-meta #projectLikeButton:hover
+#projectLikeHeart {
+    color: #ff7b72 !important;
+
+    transform: scale(1.12);
+}
+
+
+/* =====================================================
+   ĐÃ LIKE
+   ===================================================== */
+
+.project-meta #projectLikeButton.liked {
+    color: #ff7b72 !important;
+
+    border-color:
+        rgba(248, 81, 73, 0.42) !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(248, 81, 73, 0.14),
+            rgba(248, 81, 73, 0.07)
+        ) !important;
+
+    box-shadow:
+        0 0 18px
+        rgba(248, 81, 73, 0.07) !important;
+}
+
+
+.project-meta #projectLikeButton.liked
+#projectLikeHeart {
+    color: #ff4d5a !important;
+
+    text-shadow:
+        0 0 10px
+        rgba(255, 77, 90, 0.38) !important;
+}
+
+
+/* Hover khi đã like */
+
+.project-meta #projectLikeButton.liked:hover {
+    border-color:
+        rgba(248, 81, 73, 0.72) !important;
+
+    background:
+        rgba(248, 81, 73, 0.17) !important;
+
+    box-shadow:
+        0 0 20px
+        rgba(248, 81, 73, 0.12) !important;
+}
+
+
+/* Khi click */
+
+.project-meta #projectLikeButton:active {
+    transform:
+        translateY(0)
+        scale(0.94) !important;
+}
+
+
+/* Animation tim */
+
+.project-meta
+#projectLikeHeart.heart-pop {
+    animation:
+        like-heart-v2
+        0.5s
+        cubic-bezier(
+            0.17,
+            0.89,
+            0.32,
+            1.49
+        ) !important;
+}
+
+
+@keyframes like-heart-v2 {
+
+    0% {
+        transform: scale(1);
+    }
+
+    25% {
+        transform:
+            scale(0.7)
+            rotate(-10deg);
+    }
+
+    55% {
+        transform:
+            scale(1.65)
+            rotate(8deg);
+    }
+
+    75% {
+        transform:
+            scale(0.9)
+            rotate(-3deg);
+    }
+
+    100% {
+        transform:
+            scale(1)
+            rotate(0);
+    }
+}
