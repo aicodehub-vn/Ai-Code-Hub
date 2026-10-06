@@ -686,7 +686,7 @@ async function loadProjectsFromSupabase() {
             error: likeError
         } =
             await supabaseClient
-                .from("project_likes")
+                .from("project_likes")F
                 .select("project_id");
 
                 alert(
@@ -750,6 +750,13 @@ async function loadProjectsFromSupabase() {
                     likeCountByProject[
                         project.id
                     ] || 0;
+
+                    alert(
+    "PROJECT ID: " +
+    project.id +
+    "\nLIKE COUNT: " +
+    project.likes
+);
 
 
                 createUserProjectCard(
