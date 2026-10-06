@@ -689,6 +689,13 @@ async function loadProjectsFromSupabase() {
                 .from("project_likes")
                 .select("project_id");
 
+                alert(
+    "LIKE ROWS: " +
+    JSON.stringify(likeRows) +
+    "\n\nERROR: " +
+    JSON.stringify(likeError)
+);
+
 
         if (likeError) {
 
