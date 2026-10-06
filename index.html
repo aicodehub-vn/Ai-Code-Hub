@@ -42,9 +42,33 @@
                 + Đăng code
             </button>
 
-            <a href="login.html" class="login-btn">
+            <!-- Chưa đăng nhập -->
+            <a href="login.html" class="login-btn" id="loginButton">
                 Đăng nhập
             </a>
+
+            <!-- Đã đăng nhập -->
+            <div id="userArea" style="display: none; align-items: center; gap: 10px;">
+
+                <button
+                    id="userButton"
+                    class="login-btn"
+                    type="button"
+                    style="cursor: default;"
+                >
+                    👤 Tài khoản
+                </button>
+
+                <button
+                    id="logoutButton"
+                    class="login-btn"
+                    type="button"
+                    style="cursor: pointer;"
+                >
+                    Đăng xuất
+                </button>
+
+            </div>
 
         </div>
 
@@ -428,6 +452,11 @@
         </section>
 
     </main>
+
+
+    <!-- ===== SUPABASE ===== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 
     <!-- ===== JAVASCRIPT ===== -->
