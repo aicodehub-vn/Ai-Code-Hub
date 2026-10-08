@@ -1,0 +1,240 @@
+name: Publish KuroLive Windows Release
+
+on:
+  push:
+    branches: [kurolive-release]
+    paths:
+      - '.github/workflows/kurolive-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch KuroLive source payload
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path buildsrc | Out-Null
+          $base = 'https://raw.githubusercontent.com/aicodehub-vn/For-my-Sis/kurolive-build-v32/kurolive_payload'
+          $parts = @()
+          0..6 | ForEach-Object {
+            $name = ('part{0:D2}.b64' -f $_)
+            $path = Join-Path buildsrc $name
+            Invoke-WebRequest -Uri "$base/$name" -OutFile $path
+            $parts += $path
+          }
+          $b64 = ($parts | ForEach-Object { Get-Content $_ -Raw }) -join ''
+          [IO.File]::WriteAllBytes('kurolive_build_src.zip', [Convert]::FromBase64String($b64))
+          New-Item -ItemType Directory -Force -Path kurolive_build | Out-Null
+          Expand-Archive kurolive_build_src.zip -DestinationPath kurolive_build -Force
+          if (-not (Test-Path 'kurolive_build\main.py')) { throw 'KuroLive source reconstruction failed' }
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          architecture: 'x64'
+
+      - name: Install build dependencies
+        shell: pwsh
+        working-directory: kurolive_build
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install pyinstaller PySide6 live2d-py opencv-python numpy pillow
+
+      - name: Create official KuroLive logo
+        shell: pwsh
+        working-directory: kurolive_build
+        run: |
+          @'
+          from PIL import Image, ImageDraw, ImageFont, ImageFilter
+          from pathlib import Path
+          import os, math
+
+          S=512
+          img=Image.new("RGBA",(S,S),(0,0,0,0))
+          tile=Image.new("RGBA",(S,S),(0,0,0,0))
+          px=tile.load()
+          for y in range(S):
+              for x in range(S):
+                  t=y/(S-1)
+                  r=int(107+20*(1-t))
+                  g=int(72+18*(1-t))
+                  b=int(238+12*(1-t))
+                  glow=max(0.0,1.0-math.hypot(x-S*.48,y-S*.42)/(S*.72))
+                  px[x,y]=(min(255,int(r+12*glow)),
+                           min(255,int(g+8*glow)),
+                           min(255,int(b+10*glow)),255)
+          mask=Image.new("L",(S,S),0)
+          md=ImageDraw.Draw(mask)
+          md.rounded_rectangle((18,18,494,494),radius=106,fill=255)
+          tile.putalpha(mask)
+          glow=mask.filter(ImageFilter.GaussianBlur(18))
+          gl=Image.new("RGBA",(S,S),(85,45,255,0))
+          gl.putalpha(glow.point(lambda p:int(p*.45)))
+          img.alpha_composite(gl)
+          img.alpha_composite(tile)
+
+          d=ImageDraw.Draw(img)
+          d.rounded_rectangle((45,45,467,467),radius=82,outline=(205,190,255,105),width=4)
+          fonts=[r"C:\Windows\Fonts\segoeuib.ttf",r"C:\Windows\Fonts\arialbd.ttf"]
+          fp=next((p for p in fonts if os.path.exists(p)),None)
+          font=ImageFont.truetype(fp,292) if fp else ImageFont.load_default()
+          bbox=d.textbbox((0,0),"K",font=font)
+          tw,th=bbox[2]-bbox[0],bbox[3]-bbox[1]
+          x=(S-tw)//2-9
+          y=(S-th)//2-34
+          d.text((x+11,y+14),"K",font=font,fill=(29,18,91,145))
+          d.text((x,y),"K",font=font,fill=(255,255,255,255))
+          cx,cy,rad=405,397,23
+          d.ellipse((cx-rad-3,cy-rad-3,cx+rad+3,cy+rad+3),fill=(255,255,255,245))
+          d.ellipse((cx-rad+3,cy-rad+3,cx+rad-3,cy+rad-3),fill=(55,238,171,255))
+
+          img.save("KuroLive_logo.png")
+          img.save("KuroLive.ico",format="ICO",
+                   sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
+
+          spec=Path("KuroLive.spec")
+          text=spec.read_text(encoding="utf-8")
+          if "icon='KuroLive.ico'" not in text:
+              text=text.replace("name='KuroLive',\n    debug=False,",
+                                "name='KuroLive',\n    icon='KuroLive.ico',\n    debug=False,")
+          spec.write_text(text,encoding="utf-8")
+
+          iss=Path("KuroLive.iss")
+          text=iss.read_text(encoding="utf-8")
+          if "SetupIconFile=KuroLive.ico" not in text:
+              text=text.replace("SetupLogging=yes","SetupLogging=yes\nSetupIconFile=KuroLive.ico")
+          iss.write_text(text,encoding="utf-8")
+          '@ | python
+
+      - name: Build KuroLive app
+        shell: pwsh
+        working-directory: kurolive_build
+        run: |
+          pyinstaller --noconfirm --clean KuroLive.spec
+          if (-not (Test-Path 'dist\KuroLive\KuroLive.exe')) { throw 'KuroLive.exe was not created' }
+
+      - name: Download OpenSeeFace v1.20.5
+        shell: pwsh
+        working-directory: kurolive_build
+        run: |
+          $url = 'https://github.com/emilianavt/OpenSeeFace/releases/download/v1.20.5/OpenSeeFace-v1.20.5.zip'
+          Invoke-WebRequest -Uri $url -OutFile osf.zip
+          Expand-Archive osf.zip -DestinationPath osf_unpack -Force
+          $ft = Get-ChildItem osf_unpack -Recurse -Filter facetracker.exe | Select-Object -First 1
+          if (-not $ft) { throw 'facetracker.exe not found in OpenSeeFace archive' }
+          New-Item -ItemType Directory -Force -Path 'dist\KuroLive\OpenSeeFace' | Out-Null
+          Copy-Item $ft.Directory.FullName -Destination 'dist\KuroLive\OpenSeeFace\Binary' -Recurse -Force
+          if (-not (Test-Path 'dist\KuroLive\OpenSeeFace\Binary\facetracker.exe')) { throw 'OpenSeeFace copy failed' }
+
+      - name: Optional Authenticode signing
+        if: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
+        shell: pwsh
+        working-directory: kurolive_build
+        env:
+          CERT_B64: ${{ secrets.WINDOWS_CERTIFICATE }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          [IO.File]::WriteAllBytes('KuroLiveSigning.pfx',[Convert]::FromBase64String($env:CERT_B64))
+          $signtool = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin' -Recurse -Filter signtool.exe |
+            Where-Object { $_.FullName -match 'x64' } | Select-Object -Last 1
+          if (-not $signtool) { throw 'signtool.exe not found' }
+          & $signtool.FullName sign /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com /f KuroLiveSigning.pfx /p $env:CERT_PASSWORD dist\KuroLive\KuroLive.exe
+          if ($LASTEXITCODE -ne 0) { throw 'KuroLive.exe signing failed' }
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          $iscc='C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $iscc)) { choco install innosetup --no-progress -y }
+          if (-not (Test-Path $iscc)) { throw 'ISCC.exe not found' }
+
+      - name: Build installer
+        shell: pwsh
+        working-directory: kurolive_build
+        run: |
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' KuroLive.iss
+          if (-not (Test-Path 'release\KuroLive_Setup.exe')) { throw 'Installer was not created' }
+
+      - name: Optional installer signing
+        if: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
+        shell: pwsh
+        working-directory: kurolive_build
+        env:
+          CERT_B64: ${{ secrets.WINDOWS_CERTIFICATE }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if (-not (Test-Path 'KuroLiveSigning.pfx')) {
+            [IO.File]::WriteAllBytes('KuroLiveSigning.pfx',[Convert]::FromBase64String($env:CERT_B64))
+          }
+          $signtool = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin' -Recurse -Filter signtool.exe |
+            Where-Object { $_.FullName -match 'x64' } | Select-Object -Last 1
+          & $signtool.FullName sign /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com /f KuroLiveSigning.pfx /p $env:CERT_PASSWORD release\KuroLive_Setup.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Installer signing failed' }
+
+      - name: Prepare release files
+        shell: pwsh
+        working-directory: kurolive_build
+        run: |
+          $hash=(Get-FileHash 'release\KuroLive_Setup.exe' -Algorithm SHA256).Hash.ToLower()
+          "$hash  KuroLive_Setup.exe" | Set-Content -Encoding ascii 'release\SHA256SUMS.txt'
+          Copy-Item KuroLive_logo.png release\KuroLive_logo.png -Force
+          if (Test-Path THIRD_PARTY_NOTICES.txt) { Copy-Item THIRD_PARTY_NOTICES.txt release\THIRD_PARTY_NOTICES.txt -Force }
+
+          @'
+          # KuroLive v0.32 RC
+
+          KuroLive is a lightweight Windows Live2D desktop VTuber application.
+
+          ## Highlights
+          - Load Live2D .model3.json models.
+          - OpenSeeFace webcam face tracking.
+          - Transparent always-on-top desktop avatar.
+          - Native Live2D expressions with F1-F11 global hotkeys.
+          - Cubism physics with graph-safe parameter routing.
+          - Camera page with real tracking preview.
+          - Remember-last-model and RAM-saving editor/live process split.
+
+          ## Install
+          Download **KuroLive_Setup.exe**, run it, then launch KuroLive from the Start menu or desktop shortcut.
+
+          ## Windows signing
+          This release is Authenticode-signed only when a valid signing certificate is configured in the repository secrets. If no certificate is configured, Windows SmartScreen may show an Unknown Publisher warning.
+
+          ## Third-party components
+          See THIRD_PARTY_NOTICES.txt. Live2D Cubism components remain subject to Live2D Inc. licensing terms.
+          '@ | Set-Content -Encoding utf8 'release\RELEASE_NOTES.md'
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        working-directory: kurolive_build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag='KuroLive-v0.32-rc'
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            gh release delete $tag -y --cleanup-tag
+          }
+          $assets=@('release\KuroLive_Setup.exe','release\KuroLive_logo.png','release\SHA256SUMS.txt')
+          if (Test-Path 'release\THIRD_PARTY_NOTICES.txt') { $assets += 'release\THIRD_PARTY_NOTICES.txt' }
+          gh release create $tag @assets --target "$env:GITHUB_SHA" --title "KuroLive v0.32 RC" --notes-file 'release\RELEASE_NOTES.md' --prerelease
+          if ($LASTEXITCODE -ne 0) { throw 'GitHub Release publish failed' }
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KuroLive_v0.32_RC
+          path: |
+            kurolive_build/release/KuroLive_Setup.exe
+            kurolive_build/release/KuroLive_logo.png
+            kurolive_build/release/SHA256SUMS.txt
+            kurolive_build/release/THIRD_PARTY_NOTICES.txt
+          if-no-files-found: error
+          compression-level: 0
