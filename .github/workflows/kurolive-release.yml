@@ -13,6 +13,9 @@ permissions:
 jobs:
   build-and-release:
     runs-on: windows-latest
+    env:
+      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+      WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v4
@@ -134,12 +137,12 @@ jobs:
           if (-not (Test-Path 'dist\KuroLive\OpenSeeFace\Binary\facetracker.exe')) { throw 'OpenSeeFace copy failed' }
 
       - name: Optional Authenticode signing
-        if: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
+        if: ${{ env.WINDOWS_CERTIFICATE != '' }}
         shell: pwsh
         working-directory: kurolive_build
         env:
-          CERT_B64: ${{ secrets.WINDOWS_CERTIFICATE }}
-          CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          CERT_B64: ${{ env.WINDOWS_CERTIFICATE }}
+          CERT_PASSWORD: ${{ env.WINDOWS_CERTIFICATE_PASSWORD }}
         run: |
           [IO.File]::WriteAllBytes('KuroLiveSigning.pfx',[Convert]::FromBase64String($env:CERT_B64))
           $signtool = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin' -Recurse -Filter signtool.exe |
@@ -163,12 +166,12 @@ jobs:
           if (-not (Test-Path 'release\KuroLive_Setup.exe')) { throw 'Installer was not created' }
 
       - name: Optional installer signing
-        if: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
+        if: ${{ env.WINDOWS_CERTIFICATE != '' }}
         shell: pwsh
         working-directory: kurolive_build
         env:
-          CERT_B64: ${{ secrets.WINDOWS_CERTIFICATE }}
-          CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          CERT_B64: ${{ env.WINDOWS_CERTIFICATE }}
+          CERT_PASSWORD: ${{ env.WINDOWS_CERTIFICATE_PASSWORD }}
         run: |
           if (-not (Test-Path 'KuroLiveSigning.pfx')) {
             [IO.File]::WriteAllBytes('KuroLiveSigning.pfx',[Convert]::FromBase64String($env:CERT_B64))
