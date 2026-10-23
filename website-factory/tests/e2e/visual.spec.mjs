@@ -2,6 +2,7 @@ import {test,expect} from "@playwright/test";
 import {mkdir,writeFile} from "node:fs/promises";
 import {PNG} from "pngjs";
 import pixelmatch from "pixelmatch";
+import {THEMES} from "../../engine.mjs";
 
 test("visual regression: rendered Hero/Services match pinned V0.5 baseline",async({page,browser})=>{
  test.skip(process.env.FACTORY_VISUAL_BASELINE!=="1","Requires pinned reference checkout");
@@ -14,10 +15,11 @@ test("visual regression: rendered Hero/Services match pinned V0.5 baseline",asyn
  for(const theme of checked){
   for(const site of [page,baseline]){
    await expect(site.locator("#qa-score")).toContainText("PASS");
-   if(theme!=="nocturne"){
-    await site.locator("#theme").selectOption(theme);
-    await expect(site.locator("#status")).toContainText("Preview tự cập nhật");
-   }
+   if(theme!=="nocturne")await site.locator("#theme").selectOption(theme);
+   const root=site.frameLocator("#preview-frame").locator("html");
+   await expect.poll(async()=>root.evaluate(element=>getComputedStyle(element).getPropertyValue("--bg").trim()),{
+    message:"Await preview theme "+theme
+   }).toBe(THEMES[theme].bg);
   }
   for(const target of [".hero","#services"]){
    const locator=(p)=>p.frameLocator("#preview-frame").locator(target);
