@@ -77,3 +77,10 @@
 .edit-history button:hover:not(:disabled){background:#3a4749;border-color:#d5ad7f}
 .edit-history button:disabled{opacity:.36;cursor:not-allowed}
 @media(max-width:760px){.edit-history{padding:10px 13px}.edit-history span{flex-basis:100%}}
+
+/* V0.6 accessibility: targeted contrast fixes measured by Chromium axe-core.
+   Small labels are normal-weight text, so they must meet 4.5:1 on dark cards. */
+#builder-form label[for="headline"] span,
+#builder-form label[for="email"] span{color:#afc0c2}
+.layout-item-header .layout-order{color:#b1c1c3}
+.graph-node.is-selected small{color:#b7c8ca}
