@@ -78,6 +78,10 @@ function initAIStudio({values,fill,preview,notify}){
     headers:{"content-type":"application/json"},
     body:JSON.stringify({brief:safeBrief(current)})
    });
+   if(response.status===429){
+    const seconds=Number(response.headers.get("retry-after"));
+    throw new Error("Bridge đang bận hoặc đạt giới hạn yêu cầu. "+(Number.isFinite(seconds)&&seconds>0?"Thử lại sau khoảng "+Math.ceil(seconds)+" giây.":"Hãy thử lại sau."));
+   }
    if(!response.ok)throw new Error("Mô hình không sẵn sàng hoặc JSON không hợp lệ ("+response.status+")");
    const data=await response.json();
    const checked=validateProposal(data.proposal);
