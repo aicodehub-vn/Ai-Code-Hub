@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0e1215">
+  <meta name="description" content="Website Factory: tạo mẫu website theo brief, xem trước và xuất HTML ngay trong trình duyệt.">
+  <title>Website Factory — Design Production Studio</title>
+  <link rel="stylesheet" href="./studio.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo"><span class="glyph">✳</span><span>WEBSITE<br><b>FACTORY</b></span></div>
+    <p class="side-label">WORKSPACE / 01</p>
+    <div class="side-nav"><div class="active-nav">◈ <span>Studio Builder</span><small>ACTIVE</small></div><div>▧ <span>Design Library</span></div><div>◇ <span>AI Agents</span><small>SOON</small></div></div>
+    <div class="history-title"><span>PROJECT LIBRARY</span><button type="button" id="new-project" title="Tạo dự án mới" aria-label="Tạo dự án mới">＋</button></div>
+    <div id="project-list" class="project-list"><p class="empty">Chưa có dự án được lưu.</p></div>
+    <div class="sidebar-bottom"><i></i><span>LOCAL-FIRST ENGINE<small>v0.1 / NO TELEMETRY</small></span></div>
+  </aside>
+  <div class="main">
+    <header class="topbar"><div>WORKSPACE <span>/</span> STUDIO BUILDER <span>/</span> <b>EDITOR</b></div><div class="top-right"><span>● NO API KEY REQUIRED</span><strong>WF</strong></div></header>
+    <div class="workspace">
+      <div class="intro">
+        <div><div class="overline">DESIGN OPERATING SYSTEM <span class="step">01 / CREATE</span></div>
+          <h1>Biến ý tưởng thành <em>website.</em></h1>
+          <p>Từ một brief đơn giản đến trang web hoàn chỉnh. Tạo mẫu, xem trước và xuất mã HTML — không cần backend.</p>
+        </div><span aria-hidden="true" class="intro-glyph">✳</span>
+      </div>
+      <main class="panels">
+        <section class="panel config" aria-labelledby="input-title">
+          <div class="panel-head"><div><span class="number">01</span><h2 id="input-title">Creative Brief</h2></div><span class="tag">INPUT</span></div>
+          <form id="builder-form">
+            <label for="name">TÊN DỰ ÁN / THƯƠNG HIỆU</label>
+            <input id="name" name="name" maxlength="70" required placeholder="Tên dự án của bạn" value="Atelier Siro">
+            <label for="category">LOẠI WEBSITE</label>
+            <select id="category" name="category"><option value="agency">Creative Studio / Agency</option><option value="restaurant">Restaurant & Café</option><option value="saas">SaaS / Tech Product</option><option value="portfolio">Personal Portfolio</option></select>
+            <label for="headline">TIÊU ĐỀ CHÍNH <span>(TÙY CHỌN)</span></label>
+            <input id="headline" name="headline" maxlength="130" placeholder="Để trống để dùng đề xuất">
+            <label for="brief">MÔ TẢ Ý TƯỞNG / CREATIVE BRIEF</label>
+            <textarea id="brief" name="brief" maxlength="450" rows="5" placeholder="Sản phẩm, dịch vụ, phong cách, khách hàng mục tiêu...">Một studio thiết kế trải nghiệm số, nơi nghệ thuật và công nghệ gặp nhau.</textarea>
+            <div class="two-col">
+              <div><label for="theme">BẢNG MÀU</label>
+                <select id="theme" name="theme"><option value="nocturne">Nocturne / Dark</option><option value="paper">Paper / Light</option><option value="signal">Signal / Future</option><option value="forest">Forest / Organic</option></select></div>
+              <div><label for="accent">MÀU NHẤN</label><div class="color-field"><input id="accent" name="accent" type="color" value="#e9b47b"><button type="button" id="reset-color">Reset</button></div></div>
+            </div>
+            <label for="layout">BỐ CỤC HERO</label>
+            <select id="layout" name="layout"><option value="split">Split / Editorial</option><option value="centered">Centered / Statement</option></select>
+            <label for="email">EMAIL LIÊN HỆ <span>(TÙY CHỌN)</span></label>
+            <input id="email" name="email" type="email" maxlength="120" placeholder="hello@example.com">
+            <button class="generate" type="submit"><span>✳ Tạo / cập nhật website</span><span>↗</span></button>
+          </form>
+          <div class="notice"><span>✦</span><p><b>Generation Engine v0.1</b><br>Hệ thống tạo website theo mẫu cấu hình. Chưa tích hợp LLM, không gửi brief lên máy chủ.</p></div>
+        </section>
+        <section class="panel preview-panel" aria-labelledby="preview-title">
+          <div class="panel-head"><div><span class="number">02</span><h2 id="preview-title">Live Preview</h2></div><span class="tag ready">● PREVIEW READY</span></div>
+          <div class="preview-toolbar"><span id="preview-url" class="preview-url">◉ preview.local / atelier-siro</span>
+            <div class="devices" role="group" aria-label="Kích thước xem trước">
+              <button type="button" data-device="desktop" class="device selected" aria-pressed="true">▣ Desktop</button>
+              <button type="button" data-device="mobile" class="device" aria-pressed="false">▯ Mobile</button>
+            </div>
+          </div>
+          <div id="preview-stage" class="preview-stage"><iframe title="Bản xem trước website đã tạo" id="preview-frame" sandbox="" loading="eager"></iframe></div>
+          <div class="preview-bottom"><span class="preview-status"><i></i><span id="status" role="status" aria-live="polite">Đã tạo trang mẫu</span></span><span>RESPONSIVE · STATIC HTML</span></div>
+          <div class="actions">
+            <button id="export-html" type="button" class="export">↓ Xuất HTML</button>
+            <button id="copy-html" type="button" class="outline">⧉ Sao chép mã</button>
+            <button id="save-project" type="button" class="outline">⌑ Lưu dự án</button>
+          </div>
+          <div class="pipeline"><span>↗</span><div><b>Production pipeline</b><p>Creative Brief → Theme Engine → Responsive Preview → HTML Export. AI, ảnh tự động và triển khai hosting sẽ là những giai đoạn tiếp theo.</p></div></div>
+        </section>
+      </main>
+      <footer><span>WEBSITE FACTORY © 2026</span><span>LOCAL-FIRST · ACCESSIBLE · PRIVACY BY DESIGN</span></footer>
+    </div>
+  </div>
+</div>
+<script type="module" src="./app.mjs"></script>
+</body>
+</html>
