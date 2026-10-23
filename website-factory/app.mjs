@@ -144,9 +144,10 @@ function saveProject(){
  const config=values();
  const id=activeId||(globalThis.crypto?.randomUUID?.()||"project-"+Date.now()+"-"+Math.random().toString(36).slice(2));
  const entry={id,config,updatedAt:new Date().toISOString()};
+ const previous=projects;
  projects=[entry,...projects.filter(p=>p.id!==id)].slice(0,25);
  if(writeStorage()){activeId=id;renderList();notify("Đã lưu dự án trên trình duyệt này")}
- else projects=projects.filter(p=>p.id!==id);
+ else projects=previous;
 }
 function newProject(){
  activeId=null;
