@@ -1,51 +1,63 @@
-# Website Factory — v0.1
+# WEBSITE FACTORY — v0.2 · Local-first Production Workspace
 
-Nhà máy tạo website local-first. Chạy bằng HTML/CSS/JavaScript thuần, không cần API key, backend hay npm install.
+Website Factory là nhà máy tạo website tĩnh từ brief, **không tốn tiền AI/API**. V0.2 vận hành bằng 7 công đoạn có QA gate thật. Không mô phỏng đây là các AI Agent tự chủ: toàn bộ là **deterministic workers**, có thể thay thế bằng LLM adapter có xác thực trong bản sau.
 
-## Chức năng
-- 4 loại website: creative agency, restaurant, SaaS, portfolio.
-- 4 bảng màu, tùy chọn màu HEX, 2 bố cục hero.
-- Preview desktop/mobile trong iframe sandbox, không cấp quyền script.
-- Lưu 25 dự án trong localStorage trình duyệt; backup và import cấu hình qua JSON.
-- Xuất HTML tự chứa CSS, copy toàn bộ mã nguồn.
-- Responsive layout, nội dung tiếng Việt, chế độ reduced motion.
-- Kiểm thử Node.js và GitHub Actions.
+## Đã có
+- Tạo website đơn trang từ 4 mẫu ngành: Agency / Restaurant / SaaS / Portfolio.
+- 4 palette, màu nhấn HEX, 2 layout, xem trước desktop/mobile trong iframe sandbox.
+- Content Editor: thay tiêu đề section, giới thiệu, contact, CTA và 3 card dịch vụ; live preview.
+- Agent Workspace: Brief → Design → Content → Build → QA → Repair → Export; xem trạng thái và lý do từng công đoạn.
+- QA Gate 10 quy tắc: HTML5, lang, viewport, SEO description, H1, landmarks, internal anchors, standalone resources, responsive/reduced-motion, style block.
+- Repair Worker: nếu builder trả HTML lỗi QA, thử phục hồi đúng 1 lần từ renderer chuẩn; nếu vẫn lỗi, chặn export.
+- Lưu 25 cấu hình trên trình duyệt; export/import JSON có phiên bản schema 1; tải HTML một file tự chứa CSS.
+- CLI zero-dependency và GitHub Actions sinh file `index.html` + `quality-report.json` dưới artifact `website-factory-output` (retention 7 ngày).
+
+## Chạy giao diện cục bộ
+Module ES trong trình duyệt cần server HTTP. Tại thư mục gốc repo, chạy:
+```bash
+python -m http.server 8000
+```
+Sau đó mở `http://localhost:8000/website-factory/`. **Không khuyến nghị mở index.html bằng file://** do browser có thể chặn import module.
 
 ## Sử dụng
-1. Mở website-factory/index.html trên trình duyệt, hoặc chạy thư mục bằng static server.
-2. Nhập tên, loại website và brief; chọn bảng màu, layout.
-3. Nhấn Tạo / cập nhật website, kiểm tra bản desktop/mobile.
-4. Xuất HTML và upload đến GitHub Pages, Cloudflare Pages, Netlify hoặc host tĩnh khác.
+1. Điền Creative Brief và chọn category/palette/layout.
+2. Mở **Visual Content Editor**, chỉnh các section/card. Nội dung được escape; không nhận raw HTML.
+3. Theo dõi Live Preview và **Agent Workspace**. Nhấn **Chạy kiểm định** để xem QA. Chọn từng node để đọc chi tiết.
+4. Xuất HTML hoặc Backup JSON. Export chỉ mở khi QA vượt kiểm tra.
+5. Xuất bản thủ công bằng static hosting bạn chọn; công cụ không tự đăng hoặc tạo tên miền.
 
-Trong repo này Website Factory nằm ở thư mục riêng; chưa được deploy. Nếu main được cấu hình cho GitHub Pages, sau khi merge có thể mở đường dẫn /Ai-Code-Hub/website-factory/.
+## Production từ GitHub Actions
+- Vào **Actions > Website Factory CI**. Sau khi workflow đã có ở nhánh mặc định, chọn **Run workflow**, nhập tên/category/theme/brief (không nhập bí mật).
+- Sau khi job thành công, tải artifact **website-factory-output** gồm `index.html` và `quality-report.json`.
+- Khi workflow chỉ còn trên feature branch/PR mà chưa merge, nút `Run workflow` có thể chưa hiện ở giao diện Actions. Push và PR vẫn tự chạy job/đính kèm artifact.
 
-## Kiểm thử (Node.js >=20)
+Bạn cũng có thể chạy thủ công:
 ```bash
-node --check website-factory/engine.mjs
-node --check website-factory/app.mjs
+node website-factory/factory-cli.mjs
+node website-factory/factory-cli.mjs --config my-project.factory.json
 node --test website-factory/tests/*.test.mjs
 ```
+Tệp đầu ra được ghi vào `website-factory/dist/`. `--config` nhận cấu hình thường hoặc bản sao lưu `{schemaVersion:1,config:{...}}`.
 
-## An toàn và giới hạn
-- v0.1 là generator dựa trên mẫu, KHÔNG phải hệ thống AI prompt-to-code.
-- Website xuất ra không phụ thuộc ảnh, CDN, thư viện hoặc JavaScript bên ngoài.
-- User text được HTML-escape; email và mã màu được kiểm tra.
-- Preview iframe sandbox không cấp script / same-origin.
-- Dự án trong localStorage không đồng bộ qua thiết bị và có thể mất nếu xóa dữ liệu trình duyệt.
-- Cần rà soát nội dung mẫu trước khi đưa lên production. Chưa hỗ trợ CMS, database, website nhiều trang, assets, domain, tự publish hay AI API.
+## Bảo mật và giới hạn
+- Website xuất không có JS/CDN/ảnh remote. Hệ thống chưa có AI, CMS, nhiều trang, media library hoặc publish tự động.
+- Dữ liệu project trong localStorage chỉ ở máy/trình duyệt hiện tại. Backup JSON khi cần đổi máy.
+- PR đang nằm trong **repository public**. Nội dung commit, mã nguồn và workflow artifacts trong public repo có thể công khai. Không đưa dữ liệu riêng tư/API key vào brief hoặc GitHub workflow inputs.
+- QA là structural smoke test, **không phải** kiểm thử trình duyệt thủ công, WCAG audit đầy đủ, bảo mật độc lập hay đo Lighthouse.
+- Tự động Repair chỉ nhận các trường hợp có thể dựng lại bằng renderer chuẩn; không tự động viết lại mã tùy ý bằng AI.
+- Hosting/Pages chưa được bật bởi PR này; `main` chưa được sửa. Trước khi public phải biên tập nội dung mẫu và kiểm tra link contact.
 
 ## Roadmap
-v0.2: visual section editor + ZIP đa tệp và asset manager.
-v0.3: image library có kiểm soát bản quyền + chuyển động + SEO/a11y QA.
-v0.4: AI adapter qua backend/local model + schema validation + human review (không để secret ở frontend).
-v0.5: GitHub App/OAuth publish với quyền tối thiểu và yêu cầu xác nhận.
+- V0.3: chỉnh sửa trực quan theo block, thêm/xóa/sắp xếp section, asset manager và export nhiều file.
+- V0.4: AI backend/local adapter, hợp đồng JSON schema, cách ly model output và review trước merge.
+- V0.5: GitHub publish có OAuth/App scope tối thiểu, PR preview và xác nhận rõ trước xuất bản.
 
-## Thành phần
-- index.html — giao diện Studio.
-- studio.css — giao diện và responsive.
-- engine.mjs — chuẩn hóa, mẫu website, HTML renderer.
-- app.mjs — tương tác người dùng, preview, lưu và xuất.
-- tests/engine.test.mjs — test cases.
-- .github/workflows/website-factory-ci.yml — CI.
+## Mã nguồn
+- `engine.mjs`: theme renderer và schema content.
+- `app.mjs`, `index.html`, `studio.css`: UI, editor, project library, responsive graph.
+- `pipeline.mjs`: 7 workers, QA, repair và export gate.
+- `factory-cli.mjs`: CLI dành cho GitHub Actions.
+- `tests/`: kiểm thử regression và security.
+- `.github/workflows/website-factory-ci.yml`: CI và artifact producer.
 
-Không ghi đè hoặc sửa các tệp website hiện tại trong thư mục gốc Ai-Code-Hub.
+Toàn bộ V0.2 nằm trong `website-factory/` và một workflow CI; không sửa website gốc của Ai-Code-Hub.
