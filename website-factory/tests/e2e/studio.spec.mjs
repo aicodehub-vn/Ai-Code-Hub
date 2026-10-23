@@ -113,6 +113,21 @@ test("Selecting secondary pages produces downloadable valid ZIP and standalone H
   expect(markup).toContain("id=\"services\"");
 });
 
+test("Undo and redo restore entire site state without losing export eligibility",async({page})=>{
+  await ready(page);
+  await expect(page.locator("#undo-edit")).toBeDisabled();
+  const oldValue=await page.locator("#headline").inputValue();
+  await page.locator("#headline").fill("Bản thử Undo");
+  await expect(page.frameLocator("#preview-frame").locator("h1")).toHaveText("Bản thử Undo");
+  await expect(page.locator("#undo-edit")).toBeEnabled();
+  await page.locator("#undo-edit").click();
+  await expect(page.locator("#headline")).toHaveValue(oldValue);
+  await expect(page.locator("#redo-edit")).toBeEnabled();
+  await page.locator("#redo-edit").click();
+  await expect(page.locator("#headline")).toHaveValue("Bản thử Undo");
+  await expect(page.locator("#qa-score")).toContainText("PASS");
+});
+
 test("Project JSON import rejects malformed input without changing active design",async({page})=>{
   await ready(page);
   const before=await page.locator("#name").inputValue();
