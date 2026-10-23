@@ -30,7 +30,12 @@ test("WCAG A/AA accessibility scan: Studio and generated website",async({page,br
  await exportContext.close();
  const serious=[...studio.violations,...site.violations].filter(v=>v.impact==="critical"||v.impact==="serious");
  console.log("[ACCESSIBILITY] Studio violations: "+studio.violations.length+", exported violations: "+site.violations.length);
- for(const violation of serious)console.error("[A11Y] "+violation.impact+" "+violation.id+" "+violation.help+" nodes="+violation.nodes.length);
+ for(const violation of serious){
+  console.error("[A11Y] "+violation.impact+" "+violation.id+" "+violation.help+" nodes="+violation.nodes.length);
+  for(const node of violation.nodes){
+   console.error("[A11Y NODE]",JSON.stringify({target:node.target,summary:node.failureSummary?.slice(0,500)}));
+  }
+ }
  expect(serious.map(v=>v.id+" ("+v.impact+")")).toEqual([]);
 });
 
