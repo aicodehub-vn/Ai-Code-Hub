@@ -43,7 +43,8 @@ test("Section Builder adds FAQ, reorders it and keeps it after reload",async({pa
   await ready(page);
   await page.locator("#add-section-type").selectOption("faq");
   await page.locator("#add-section").click();
-  const block=page.locator("#section-list li").last();
+  const sectionId=await page.locator("#section-list li").last().getAttribute("data-section-id");
+  const block=page.locator('#section-list li[data-section-id="'+sectionId+'"]');
   await block.locator('[data-block-field="title"]').fill("Hỏi đáp thử nghiệm");
   await block.locator('[data-block-field="body"]').fill("Câu hỏi? | Trả lời xác minh.\nCâu thứ hai? | Câu trả lời thứ hai.");
   for(let i=0;i<3;i++)await block.locator('[data-action="up"]').click();
@@ -62,6 +63,7 @@ test("Section Builder adds FAQ, reorders it and keeps it after reload",async({pa
 
 test("Uploaded image is embedded locally, previewed and remains after JSON backup/import",async({page})=>{
   await ready(page);
+  await page.locator("#asset-library").evaluate(el=>el.open=true);
   await page.locator("#image-upload").setInputFiles({
     name:"tiny.png",mimeType:"image/png",buffer:Buffer.from(TINY_PNG,"base64")
   });
@@ -90,6 +92,7 @@ test("Uploaded image is embedded locally, previewed and remains after JSON backu
 
 test("Selecting secondary pages produces downloadable valid ZIP and standalone HTML",async({page})=>{
   await ready(page);
+  await page.locator("#bundle-settings").evaluate(el=>el.open=true);
   await page.locator('[data-page="about"]').check();
   await page.locator('[data-page="contact"]').check();
   const [zipDownload]=await Promise.all([
