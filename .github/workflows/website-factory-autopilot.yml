@@ -34,6 +34,11 @@ on:
         required: true
         default: false
         type: boolean
+      deploy_pages:
+        description: "Deploy generated site to /factory-site/ on GitHub Pages (requires Pages setup; main only)"
+        required: true
+        default: false
+        type: boolean
   repository_dispatch:
     types: [website-factory-build]
 
@@ -149,3 +154,40 @@ jobs:
             output/site.zip output/quality-report.json \
             --title "Website Factory automatic build #${{ github.run_number }}" \
             --notes "Unattended website output. Recipe-driven, QA-gated, and explicitly published from the main branch. This is a downloadable release, not a deployed live website."
+
+  deploy-pages:
+    name: Deploy /factory-site/ to Pages · opt-in only
+    needs: [build, browser-smoke]
+    if: ${{ github.ref == 'refs/heads/main' && ((github.event_name == 'workflow_dispatch' && inputs.deploy_pages == true) || (github.event_name == 'push' && vars.FACTORY_PUBLISH_PAGES == '1')) }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: website-factory-autopilot-site
+          path: output
+      - name: Assemble Pages preserving Ai Code Hub root pages
+        run: |
+          mkdir -p pages/factory-site
+          cp ./*.html ./*.css ./*.js pages/
+          cp output/*.html pages/factory-site/
+          touch pages/.nojekyll
+          python3 - <<'PY'
+          from pathlib import Path
+          assert (Path("pages")/"index.html").is_file()
+          assert (Path("pages")/"factory-site"/"index.html").is_file()
+          print("Pages root preserved; new generated site isolated at /factory-site/")
+          PY
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages
+      - id: deployment
+        uses: actions/deploy-pages@v4
