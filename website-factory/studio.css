@@ -68,3 +68,12 @@
 .pages-options small{margin-left:auto;color:#92a09e;font-size:10px}
 .actions button:disabled{opacity:.4;cursor:not-allowed}
 @media(max-width:760px){.bundle-settings{margin-left:18px;margin-right:18px}}
+
+
+/* V0.5 — unobtrusive undo/redo */
+.edit-history{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;padding:12px 19px;border-bottom:1px solid #324044}
+.edit-history span{color:#879799;letter-spacing:.1em;font-size:9px;margin-right:auto}
+.edit-history button{border:1px solid #4a595b;border-radius:4px;color:#e8e6e0;background:#263236;font-size:11px;padding:8px 11px}
+.edit-history button:hover:not(:disabled){background:#3a4749;border-color:#d5ad7f}
+.edit-history button:disabled{opacity:.36;cursor:not-allowed}
+@media(max-width:760px){.edit-history{padding:10px 13px}.edit-history span{flex-basis:100%}}
