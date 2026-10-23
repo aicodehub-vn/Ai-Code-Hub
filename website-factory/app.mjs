@@ -1,4 +1,5 @@
-import {normalize,THEMES,renderSite,slug} from "./engine.mjs";
+import {normalize,THEMES,renderSite,slug,contentDefaults,EDIT_FIELDS} from "./engine.mjs";
+import {STATIONS,runPipeline} from "./pipeline.mjs";
 
 const KEY="website-factory.projects.v1";
 const form=document.getElementById("builder-form");
@@ -7,8 +8,81 @@ const stage=document.getElementById("preview-stage");
 const status=document.getElementById("status");
 const previewUrl=document.getElementById("preview-url");
 const list=document.getElementById("project-list");
-let projects=[],activeId=null,customAccent=false,currentHtml="",inputTimer;
+let projects=[],activeId=null,customAccent=false,currentHtml="",inputTimer,selectedStage="qa",lastResult=null;
 function notify(message){status.textContent=message}
+const editor=document.getElementById("content-editor");
+const editorFields=document.getElementById("editor-fields");
+const serviceFields=document.getElementById("service-fields");
+function makeServiceFields(){
+ serviceFields.replaceChildren();
+ for(let i=0;i<3;i++){
+  const block=document.createElement("div");block.className="service-card-edit";
+  const heading=document.createElement("h3");heading.textContent="CARD "+String(i+1).padStart(2,"0");
+  block.append(heading);
+  for(const [key,title,limit] of [["title","TÊN DỊCH VỤ",90],["description","MÔ TẢ NGẮN",250]]){
+   const label=document.createElement("label"),element=document.createElement("input");
+   element.type="text";element.maxLength=limit;element.dataset.serviceIndex=String(i);element.dataset.serviceField=key;
+   element.id="service-"+key+"-"+i;
+   label.setAttribute("for",element.id);label.textContent=title;
+   block.append(label,element);
+  }
+  serviceFields.append(block);
+ }
+}
+function fillEditor(content){
+ for(const field of EDIT_FIELDS){
+  const element=editorFields.querySelector('[data-content="'+field+'"]');
+  if(element)element.value=content[field]||"";
+ }
+ for(let i=0;i<3;i++){
+  for(const key of ["title","description"]){
+   const element=serviceFields.querySelector('[data-service-index="'+i+'"][data-service-field="'+key+'"]');
+   if(element)element.value=content.services[i]?.[key]||"";
+  }
+ }
+}
+function editorValues(){
+ const content={};
+ for(const field of EDIT_FIELDS)content[field]=editorFields.querySelector('[data-content="'+field+'"]')?.value||"";
+ content.services=Array.from({length:3},(_,i)=>({
+  title:serviceFields.querySelector('[data-service-index="'+i+'"][data-service-field="title"]')?.value||"",
+  description:serviceFields.querySelector('[data-service-index="'+i+'"][data-service-field="description"]')?.value||""
+ }));
+ return content;
+}
+function renderGraph(result){
+ if(!result)return;
+ lastResult=result;
+ for(const station of STATIONS){
+  const node=document.querySelector('[data-agent="'+station.id+'"]');
+  const stageResult=result.stages.find(item=>item.id===station.id);
+  if(!node)continue;
+  node.dataset.state=stageResult?.status||"waiting";
+  node.querySelector(".node-state").textContent=(stageResult?.status||"waiting").toUpperCase();
+  node.classList.toggle("is-selected",selectedStage===station.id);
+  node.setAttribute("aria-pressed",String(selectedStage===station.id));
+ }
+ const current=STATIONS.find(s=>s.id===selectedStage)||STATIONS[0];
+ const step=result.stages.find(s=>s.id===selectedStage);
+ document.getElementById("agent-title").textContent=current.title;
+ document.getElementById("agent-detail").textContent=current.role+"\n"+(step?step.status.toUpperCase()+": "+step.summary:"Không có kết quả");
+ const score=document.getElementById("qa-score"),issues=document.getElementById("qa-results");
+ const checks=result.report.checks||[];
+ score.textContent=(result.ok?"PASS · ":"BLOCKED · ")+checks.filter(x=>x.pass).length+"/"+checks.length+" CHECKS";
+ issues.replaceChildren();
+ for(const check of checks){
+  const li=document.createElement("li");li.className=check.pass?"ok":"fail";
+  li.textContent=check.description;issues.append(li);
+ }
+ document.getElementById("qa-warning").textContent=result.warnings.join(" ");
+ document.getElementById("export-html").disabled=!result.ok;
+ document.getElementById("copy-html").disabled=!result.ok;
+}
+function schedulePreview(message){
+ clearTimeout(inputTimer);
+ inputTimer=setTimeout(()=>preview(message),250);
+}
+
 function readStorage(){
  try{const parsed=JSON.parse(localStorage.getItem(KEY)||"[]");return Array.isArray(parsed)?parsed.filter(p=>p&&typeof p==="object"&&p.id&&p.config).slice(0,25):[]}
  catch{return []}
@@ -22,21 +96,25 @@ function fill(config){
  for(const key of ["name","category","headline","brief","theme","layout","email"]){const el=form.elements.namedItem(key);if(el)el.value=c[key]||""}
  customAccent=Boolean(c.accent);
  form.elements.namedItem("accent").value=c.accent||THEMES[c.theme].accent;
+ fillEditor(c.content);
 }
 function values(){
  const f=new FormData(form);
  const data={};
  for(const key of ["name","category","headline","brief","theme","layout","email"])data[key]=String(f.get(key)||"");
  data.accent=customAccent?String(f.get("accent")||""):"";
+ data.content=editorValues();
  return normalize(data);
 }
 function preview(message="Bản xem trước đã cập nhật"){
  try{
   const data=values();
-  currentHtml=renderSite(data);
-  frame.srcdoc=currentHtml;
+  const result=runPipeline(data);
+  currentHtml=result.ok?result.html:"";
+  frame.srcdoc=currentHtml||'<p style="font-family:sans-serif;padding:30px">QA chặn bản xem trước. Kiểm tra báo cáo bên dưới.</p>';
+  renderGraph(result);
   previewUrl.textContent="◉ local-preview / "+slug(data.name);
-  notify(message);
+  notify(result.ok?message:"QA đã chặn website. Xem Quality Report.");
  }catch(e){
   notify("Lỗi tạo website: "+(e instanceof Error?e.message:"Không rõ nguyên nhân"));
   console.error(e);
@@ -83,6 +161,7 @@ function download(){
  notify("Đã xuất HTML. Hãy kiểm tra nội dung trước khi xuất bản.");
 }
 function backupJson(){
+ clearTimeout(inputTimer);
  const config=values();
  const payload=JSON.stringify({schemaVersion:1,config},null,2);
  const blob=new Blob([payload],{type:"application/json;charset=utf-8"});
@@ -124,9 +203,25 @@ async function copy(){
  }catch{notify("Không thể sao chép. Hãy dùng nút Xuất HTML.")}
 }
 form.addEventListener("submit",event=>{event.preventDefault();if(!form.reportValidity())return;preview("Website đã được tạo theo cấu hình hiện tại")});
-form.addEventListener("input",()=>{
+form.addEventListener("input",()=>schedulePreview("Preview tự cập nhật"));
+editor.addEventListener("input",()=>schedulePreview("Nội dung đã cập nhật"));
+form.elements.namedItem("category").addEventListener("change",()=>{
+ const normalized=values();
+ fillEditor(contentDefaults(normalized.category,normalized.brief));
+ schedulePreview("Đã áp dụng nội dung mẫu của ngành mới");
+});
+document.getElementById("reset-content").addEventListener("click",()=>{
+ const data=values();
+ fillEditor(contentDefaults(data.category,data.brief));
+ preview("Đã khôi phục nội dung theo mẫu");
+});
+document.querySelectorAll("[data-agent]").forEach(node=>node.addEventListener("click",()=>{
+ selectedStage=node.dataset.agent;
+ renderGraph(lastResult);
+}));
+document.getElementById("run-pipeline").addEventListener("click",()=>{
  clearTimeout(inputTimer);
- inputTimer=setTimeout(()=>preview("Preview tự cập nhật"),320);
+ preview("Đã kiểm định tất cả công đoạn");
 });
 form.elements.namedItem("theme").addEventListener("change",()=>{
  if(!customAccent)form.elements.namedItem("accent").value=THEMES[form.elements.namedItem("theme").value].accent;
@@ -148,6 +243,7 @@ document.getElementById("copy-html").addEventListener("click",copy);
 document.getElementById("export-json").addEventListener("click",backupJson);
 document.getElementById("import-json-button").addEventListener("click",()=>document.getElementById("import-json-file").click());
 document.getElementById("import-json-file").addEventListener("change",importJson);
+makeServiceFields();
 projects=readStorage();
 if(projects.length){activeId=projects[0].id;fill(projects[0].config)}
 else fill({name:"Atelier Siro",brief:"Một studio thiết kế trải nghiệm số, nơi nghệ thuật và công nghệ gặp nhau.",theme:"nocturne"});
