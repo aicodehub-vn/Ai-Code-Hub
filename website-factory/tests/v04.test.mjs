@@ -58,6 +58,16 @@ test("pages can be selected, sanitized, and each page has distinct content",()=>
  assert.equal(verifySiteFiles(files).ok,true);
 });
 
+test("main navigation links to generated pages without losing in-page CTAs",()=>{
+ const files=buildSiteFiles({extraPages:["about","services"]}).files;
+ const html=files["index.html"];
+ assert.match(html,/<nav aria-label="Điều hướng chính">[\s\S]*href="services.html"/);
+ assert.match(html,/<nav aria-label="Điều hướng chính">[\s\S]*href="about.html"/);
+ assert.match(html,/href="#services">Khám phá ngay/);
+ assert.match(html,/href="#contact"/);
+ assert.equal(verifySiteFiles(files).ok,true);
+});
+
 test("broken cross-page href is blocked by bundle QA",()=>{
  const files=buildSiteFiles({extraPages:["about"]}).files;
  const invalid={...files,"about.html":files["about.html"].replace('href="index.html"','href="ghost.html"')};
