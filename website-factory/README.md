@@ -34,6 +34,9 @@ Muốn AI hoạt động tự động **trong một lần chạy đã cấp quy�
 - `ai_mode=required`: bắt buộc gọi model và kiểm tra JSON; model không kết nối/không đạt → FAIL, **không xuất bản kết quả sai**.
 - `enable_remote_ai=true`: cấp quyền cho đúng lượt chạy này được gọi provider (có thể tính phí). Nếu `false`, provider bị vô hiệu hóa. Các lượt `push` và `pull_request` **luôn chạy offline**, không tự động tiêu thụ API key.
 - `publish_release=false` (mặc định): chỉ tạo artifact. `true` trên `main` sẽ **tự phát hành ZIP và báo cáo dưới dạng GitHub Release công khai**, sau khi Chromium smoke PASS. Không thể publish từ PR/feature branch và không dùng thay thế hosting.
+- `deploy_pages=false` (mặc định): giữ nguyên hosting. `true` trên `main`, với GitHub Pages đã được cấu hình **Source = GitHub Actions**, sẽ tự xuất bản website sinh ra tại thư mục `/factory-site/`; workflow đóng gói các trang HTML/CSS/JS có sẵn ở root vào Pages artifact để giữ website Ai Code Hub hiện tại. Pages deploy chỉ chạy sau build + Chromium PASS.
+- Nếu muốn các lần **push recipe trên `main` tự cập nhật Pages**, đặt repository **Variable** `FACTORY_PUBLISH_PAGES=1` và bật Pages (GitHub Actions). Đây là cấu hình opt-in cố định do chủ repository thực hiện; nhánh feature và PR không được deploy.
+- **Lưu ý Pages:** thay đổi source/deployment của Pages có thể thay thế nội dung đang xuất bản bởi pipeline khác; hãy xem trước trạng thái Pages và backup phương thức deploy hiện có trước khi bật. Workflow chỉ sao chép những file HTML/CSS/JS ở root; nếu website root bổ sung hình/assets ngoài danh sách đó cần bổ sung bước copy.
 
 Model phải hỗ trợ API OpenAI-compatible chat-completions và phản hồi đúng JSON. **Chưa xác nhận hoạt động với model thực**; CI chỉ thử model giả lập. Không nhập API key hay nội dung bí mật trực tiếp vào recipe công khai. Trình tạo website chỉ chấp nhận nội dung có schema, không chạy JS/HTML do AI viết. Bộ kiểm tra tuyên bố đáng nghi là heuristic hạn chế, **không thay thế người biên tập/fact-checking**.
 
@@ -49,10 +52,11 @@ Report ghi `passed`, `pages`, `checks`, `stages`, `warnings`, `ai.mode`, `ai.app
 | Test thật trên Chromium desktop/mobile, upload artifact | Có khi chạy GitHub Actions |
 | Gọi AI để viết nội dung | Có, **chỉ khi cho phép và cung cấp model** |
 | Công bố ZIP lên public GitHub Releases | Có, **chỉ khi bật `publish_release` trên main** |
-| Triển khai website lên GitHub Pages/domain/hosting | **Chưa**, cần cấu hình đích, để tránh ghi đè Ai Code Hub hiện hữu |
+| Triển khai website lên GitHub Pages tại `/factory-site/` | **Có điều kiện**: chỉ khi chủ repo bật deploy Pages trên `main`, Pages source dùng GitHub Actions và CI PASS. Không tự đổi Pages Settings. |
+| Deploy sang hosting khác, mua domain và DNS | **Chưa**, phụ thuộc dịch vụ và quyền quản trị ngoài repo |
 | AI tùy ý tự viết mã HTML/CSS/JS hoặc quản lý domain | **Chưa**, chưa có sandbox/production deploy |
 
-GitHub Release là gói tải xuống, **không phải website trực tuyến**. Đây là mức tự động hóa đầu-cuối đối với **tạo, kiểm tra và đóng gói website**, không phải lời cam kết mọi bước xuất bản trên bất kỳ hosting nào đều được tự động hoàn toàn.
+GitHub Release là gói tải xuống, **không phải website trực tuyến**. GitHub Pages mới là website online nếu chủ repository bật cấu hình triển khai, với đường dẫn dự án `/factory-site/`. Đây là mức tự động hóa đầu-cuối đối với **tạo, kiểm tra và đóng gói website**, không phải lời cam kết mọi bước xuất bản trên bất kỳ hosting nào đều được tự động hoàn toàn.
 
 ## Trải nghiệm hiện có
 
