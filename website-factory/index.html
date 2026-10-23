@@ -13,10 +13,10 @@
   <aside class="sidebar">
     <div class="logo"><span class="glyph">✳</span><span>WEBSITE<br><b>FACTORY</b></span></div>
     <p class="side-label">WORKSPACE / 01</p>
-    <div class="side-nav"><div class="active-nav">◈ <span>Studio Builder</span><small>ACTIVE</small></div><div>▧ <span>Design Library</span></div><div>◇ <span>Pipeline Stations</span><small>V0.3</small></div></div>
+    <div class="side-nav"><div class="active-nav">◈ <span>Studio Builder</span><small>ACTIVE</small></div><div>▧ <span>Design Library</span></div><div>◇ <span>Pipeline Stations</span><small>V0.4</small></div></div>
     <div class="history-title"><span>PROJECT LIBRARY</span><button type="button" id="new-project" title="Tạo dự án mới" aria-label="Tạo dự án mới">＋</button></div>
     <div id="project-list" class="project-list"><p class="empty">Chưa có dự án được lưu.</p></div>
-    <div class="sidebar-bottom"><i></i><span>LOCAL-FIRST ENGINE<small>v0.1 / NO TELEMETRY</small></span></div>
+    <div class="sidebar-bottom"><i></i><span>LOCAL-FIRST ENGINE<small>v0.4 / NO TELEMETRY</small></span></div>
   </aside>
   <div class="main">
     <header class="topbar"><div>WORKSPACE <span>/</span> STUDIO BUILDER <span>/</span> <b>EDITOR</b></div><div class="top-right"><span>● NO API KEY REQUIRED</span><strong>WF</strong></div></header>
@@ -46,6 +46,8 @@
             </div>
             <label for="layout">BỐ CỤC HERO</label>
             <select id="layout" name="layout"><option value="split">Split / Editorial</option><option value="centered">Centered / Statement</option></select>
+            <label for="motion">ANIMATION</label>
+            <select id="motion" name="motion"><option value="off">Off — không chuyển động</option><option value="subtle" selected>Subtle — mượt, tiết chế</option><option value="expressive">Expressive — chuyển động mạnh hơn</option></select>
             <label for="email">EMAIL LIÊN HỆ <span>(TÙY CHỌN)</span></label>
             <input id="email" name="email" type="email" maxlength="120" placeholder="hello@example.com">
             <button class="generate" type="submit"><span>✳ Tạo / cập nhật website</span><span>↗</span></button>
@@ -70,7 +72,16 @@
             <summary><span>▧ <strong>Section Builder</strong></span><small>DRAG · REORDER · EDIT</small></summary>
             <p class="editor-help">Kéo section để đổi vị trí; trên điện thoại dùng phím ↑ ↓. Các section chính giữ lại để liên kết menu không bị gãy. Bạn có thể thêm/xóa section tùy biến.</p>
             <ol id="section-list" class="section-list" aria-label="Thứ tự các section"></ol>
-            <div class="layout-add"><select id="add-section-type" aria-label="Loại section mới"><option value="statement">Statement</option><option value="quote">Trích dẫn</option><option value="gallery">Gallery</option></select><button type="button" id="add-section">＋ Thêm section</button><small id="layout-counter">0/8 CUSTOM</small></div>
+            <div class="layout-add"><select id="add-section-type" aria-label="Loại section mới"><option value="statement">Statement</option><option value="quote">Trích dẫn</option><option value="gallery">Gallery</option><option value="faq">FAQ / Hỏi đáp</option><option value="pricing">Pricing / Bảng giá</option><option value="team">Team / Đội ngũ</option></select><button type="button" id="add-section">＋ Thêm section</button><small id="layout-counter">0/8 CUSTOM</small></div>
+          </details>
+          <details class="bundle-settings" id="bundle-settings">
+            <summary><span>▧ <strong>Multi-page Export</strong></span><small>STATIC ZIP · OFFLINE</small></summary>
+            <p class="editor-help">Chọn các trang phụ cần tạo. Trang chính vẫn giữ tất cả section và liên kết nội bộ; những trang dưới đây có nội dung và cấu trúc HTML riêng.</p>
+            <div class="pages-options" id="pages-options">
+              <label><input type="checkbox" data-page="about"> Giới thiệu <small>about.html</small></label>
+              <label><input type="checkbox" data-page="services"> Dịch vụ <small>services.html</small></label>
+              <label><input type="checkbox" data-page="contact"> Liên hệ <small>contact.html</small></label>
+            </div>
           </details>
           <details class="asset-library" id="asset-library">
             <summary><span>▧ <strong>Asset Library</strong></span><small>LOCAL IMAGES ONLY</small></summary>
@@ -80,7 +91,7 @@
             <div class="asset-actions"><button id="image-upload-button" type="button">＋ Thêm ảnh từ máy</button><input id="image-upload" type="file" accept="image/png,image/jpeg,image/webp" hidden><small id="asset-counter">0/5 IMAGES</small></div>
             <p class="asset-note">Ảnh nhúng làm HTML lớn hơn; mỗi ảnh gốc tối đa 2 MB, thư viện tối đa 5 ảnh. Hãy sử dụng ảnh bạn có quyền khai thác.</p>
           </details>
-          <div class="notice"><span>✦</span><p><b>Generation Engine v0.3</b><br>Hệ thống tạo website theo mẫu cấu hình. Chưa tích hợp LLM, không gửi brief lên máy chủ.</p></div>
+          <div class="notice"><span>✦</span><p><b>Generation Engine v0.4</b><br>Hệ thống tạo website theo mẫu cấu hình. Chưa tích hợp LLM, không gửi brief lên máy chủ.</p></div>
         </section>
         <section class="panel preview-panel" aria-labelledby="preview-title">
           <div class="panel-head"><div><span class="number">02</span><h2 id="preview-title">Live Preview</h2></div><span class="tag ready">● PREVIEW READY</span></div>
@@ -94,6 +105,7 @@
           <div class="preview-bottom"><span class="preview-status"><i></i><span id="status" role="status" aria-live="polite">Đã tạo trang mẫu</span></span><span>RESPONSIVE · STATIC HTML</span></div>
           <div class="actions">
             <button id="export-html" type="button" class="export">↓ Xuất HTML</button>
+            <button id="export-zip" type="button" class="export">↓ Website ZIP</button>
             <button id="copy-html" type="button" class="outline">⧉ Sao chép mã</button>
             <button id="save-project" type="button" class="outline">⌑ Lưu dự án</button>
             <button id="export-json" type="button" class="outline">↓ Backup JSON</button>
