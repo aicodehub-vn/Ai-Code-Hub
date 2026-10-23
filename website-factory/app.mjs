@@ -3,6 +3,7 @@ import {initLayoutStudio} from "./layout-editor.mjs";
 import {STATIONS,runPipeline} from "./pipeline.mjs";
 import {buildSiteFiles,verifySiteFiles} from "./site-bundle.mjs";
 import {createZip} from "./zip.mjs";
+import {createHistory} from "./history.mjs";
 
 const KEY="website-factory.projects.v1";
 const MAX_BACKUP_BYTES=1800000;
@@ -13,6 +14,7 @@ const status=document.getElementById("status");
 const previewUrl=document.getElementById("preview-url");
 const list=document.getElementById("project-list");
 let projects=[],activeId=null,customAccent=false,currentHtml="",inputTimer,selectedStage="qa",lastResult=null;
+const editHistory=createHistory(12);
 function notify(message){status.textContent=message}
 const editor=document.getElementById("content-editor");
 const editorFields=document.getElementById("editor-fields");
@@ -115,9 +117,16 @@ function values(){
  Object.assign(data,layoutStudio.get());
  return normalize(data);
 }
-function preview(message="Bản xem trước đã cập nhật"){
+function syncHistoryButtons(){
+ const state=editHistory.state();
+ document.getElementById("undo-edit").disabled=!state.canUndo;
+ document.getElementById("redo-edit").disabled=!state.canRedo;
+}
+function preview(message="Bản xem trước đã cập nhật",record=true){
  try{
   const data=values();
+  if(record)editHistory.push(data);
+  syncHistoryButtons();
   const result=runPipeline(data);
   currentHtml=result.ok?result.html:"";
   frame.srcdoc=currentHtml||'<p style="font-family:sans-serif;padding:30px">QA chặn bản xem trước. Kiểm tra báo cáo bên dưới.</p>';
@@ -139,7 +148,7 @@ function renderList(){
   const title=document.createElement("strong");title.textContent=project.config.name||"Untitled";
   button.append(icon,title);
   button.title="Mở dự án "+(project.config.name||"");
-  button.addEventListener("click",()=>{activeId=project.id;fill(project.config);preview("Đã mở dự án "+project.config.name);renderList()});
+  button.addEventListener("click",()=>{clearTimeout(inputTimer);activeId=project.id;fill(project.config);editHistory.reset(values());preview("Đã mở dự án "+project.config.name,false);renderList()});
   list.append(button);
  }
 }
@@ -157,7 +166,8 @@ function saveProject(){
 function newProject(){
  activeId=null;
  fill({name:"Dự án mới",category:"agency",theme:"nocturne",brief:"",headline:"",layout:"split",email:""});
- preview("Đã tạo bản nháp mới");renderList();
+ editHistory.reset(values());
+ preview("Đã tạo bản nháp mới",false);renderList();
  form.elements.namedItem("name").focus();
 }
 function download(){
@@ -211,7 +221,8 @@ async function importJson(event){
   if(raw.schemaVersion!==1||!raw.config||typeof raw.config!=="object"||Array.isArray(raw.config))throw new Error("Không phải backup Website Factory v0.1");
   activeId=null;
   fill(raw.config);
-  preview("Đã nhập cấu hình, nhấn Lưu dự án để giữ lại.");
+  editHistory.reset(values());
+  preview("Đã nhập cấu hình, nhấn Lưu dự án để giữ lại.",false);
   renderList();
  }catch(error){notify("Không nhập được JSON: "+(error instanceof Error?error.message:"Lỗi dữ liệu"))}
 }
@@ -265,6 +276,16 @@ document.querySelectorAll("[data-device]").forEach(button=>button.addEventListen
  document.querySelectorAll("[data-device]").forEach(other=>{const selected=other===button;other.classList.toggle("selected",selected);other.setAttribute("aria-pressed",String(selected))});
  notify(mobile?"Đang xem trước trên màn hình điện thoại":"Đang xem trước trên màn hình desktop");
 }));
+function traverseHistory(direction){
+ clearTimeout(inputTimer);
+ editHistory.push(values());
+ const snapshot=direction==="undo"?editHistory.undo():editHistory.redo();
+ if(!snapshot){syncHistoryButtons();return}
+ fill(snapshot);
+ preview(direction==="undo"?"Đã hoàn tác chỉnh sửa":"Đã làm lại chỉnh sửa",false);
+}
+document.getElementById("undo-edit").addEventListener("click",()=>traverseHistory("undo"));
+document.getElementById("redo-edit").addEventListener("click",()=>traverseHistory("redo"));
 document.getElementById("save-project").addEventListener("click",saveProject);
 document.getElementById("new-project").addEventListener("click",newProject);
 document.getElementById("export-html").addEventListener("click",download);
@@ -278,5 +299,6 @@ const layoutStudio=initLayoutStudio({onChange:message=>schedulePreview(message),
 projects=readStorage();
 if(projects.length){activeId=projects[0].id;fill(projects[0].config)}
 else fill({name:"Atelier Siro",brief:"Một studio thiết kế trải nghiệm số, nơi nghệ thuật và công nghệ gặp nhau.",theme:"nocturne"});
+editHistory.reset(values());
 renderList();
-preview("Đã tạo trang mẫu — mọi thứ chạy tại trình duyệt");
+preview("Đã tạo trang mẫu — mọi thứ chạy tại trình duyệt",false);
