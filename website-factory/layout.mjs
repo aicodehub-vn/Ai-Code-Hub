@@ -3,7 +3,7 @@
  * All inputs are normalized to bounded, inert values.
  */
 const BASE_SECTIONS=["services","about","contact"];
-const TYPES=["statement","quote","gallery"];
+const TYPES=["statement","quote","gallery","faq","pricing","team"];
 const MAX_IMAGES=5;
 const MAX_IMAGE_DATA_LENGTH=320000;
 const MAX_CUSTOM_SECTIONS=8;
@@ -47,7 +47,9 @@ function normalizeLayout(raw){
   seen.add(id);
   blocks.push({
    id,type:value.type,title:plain(value.title,160)||"Tiêu đề mới",
-   body:plain(value.body,450)||"Bổ sung nội dung của bạn tại đây.",
+   body:(["faq","pricing","team"].includes(value.type)?
+   String(value.body??"").replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g," ").split("\n").slice(0,6).map(x=>plain(x,160)).join("\n").slice(0,800):
+   plain(value.body,450))||"Bổ sung nội dung của bạn tại đây.",
    assetId:safeId(value.assetId,"asset-")
   });
  }
@@ -77,9 +79,27 @@ function withoutSection(layout,id){
   order:normalized.order.filter(x=>x!==id)
  });
 }
+function splitItems(body,separator="|",max=6){
+ return String(body).split("\n").map(x=>x.trim()).filter(Boolean).slice(0,max).map(line=>{
+   const index=line.indexOf(separator);
+   return index>0?[line.slice(0,index).trim(),line.slice(index+1).trim()]:[line,""];
+ });
+}
 function customSection(block,assets){
  const heading=escapeAttr(block.title),body=escapeAttr(block.body);
  const id=escapeAttr(block.id);
+ if(block.type==="faq"){
+  const items=splitItems(block.body,"|",6).map(([question,answer])=>'<details><summary>'+escapeAttr(question)+'</summary><p>'+escapeAttr(answer||"Nội dung câu trả lời")+'</p></details>').join("");
+  return '<section class="extra extra-faq" id="'+id+'"><div class="wrap"><p class="label">QUESTIONS & ANSWERS</p><h2>'+heading+'</h2><div class="faq-items">'+items+'</div></div></section>';
+ }
+ if(block.type==="pricing"){
+  const items=splitItems(block.body,"|",3).map(([plan,price],index)=>'<article class="price-plan"><small>0'+(index+1)+' / PLAN</small><h3>'+escapeAttr(plan)+'</h3><p>'+escapeAttr(price||"Liên hệ báo giá")+'</p></article>').join("");
+  return '<section class="extra extra-pricing" id="'+id+'"><div class="wrap"><p class="label">OUR PLANS</p><h2>'+heading+'</h2><div class="pricing-grid">'+items+'</div></div></section>';
+ }
+ if(block.type==="team"){
+  const items=splitItems(block.body,"|",6).map(([person,role])=>'<article class="team-member"><span aria-hidden="true">✳</span><h3>'+escapeAttr(person)+'</h3><p>'+escapeAttr(role||"Thành viên")+'</p></article>').join("");
+  return '<section class="extra extra-team" id="'+id+'"><div class="wrap"><p class="label">PEOPLE BEHIND THE WORK</p><h2>'+heading+'</h2><div class="team-grid">'+items+'</div></div></section>';
+ }
  if(block.type==="quote")return '<section class="extra extra-quote" id="'+id+'"><div class="wrap"><p class="label">THE VOICE</p><blockquote>“'+body+'”</blockquote><p class="quote-by">— '+heading+'</p></div></section>';
  if(block.type==="gallery"){
   const asset=assets.find(x=>x.id===block.assetId);
