@@ -1,3 +1,4 @@
+import {validateHtml} from "./pipeline.mjs";
 import {normalize,renderSite} from "./engine.mjs";
 const PAGES=["about","services","contact"];
 function esc(value){return String(value).replace(/[&<>"\x27]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","\x27":"&#39;"}[c]))}
@@ -20,4 +21,22 @@ function buildSiteFiles(raw){
  }
  return {config:c,files};
 }
-export {PAGES,buildSiteFiles};
+function verifySiteFiles(files){
+ const expected=new Set(Object.keys(files)),issues=[];
+ for(const [file,html] of Object.entries(files)){
+  const structural=validateHtml(html);
+  for(const error of structural.errors){
+   if(file!=="index.html"&&["landmarks","anchorLinks"].includes(error.code))continue;
+   issues.push({file,code:error.code});
+  }
+  const refs=[...html.matchAll(/\bhref="([^"]+)"/g)].map(match=>match[1]);
+  for(const href of refs){
+   if(/^(mailto:|#)/.test(href))continue;
+   const [path,fragment]=href.split("#",2);
+   if(!expected.has(path)){issues.push({file,code:"missing-page:"+path});continue}
+   if(fragment&&!files[path].includes('id="'+fragment+'"'))issues.push({file,code:"missing-fragment:"+fragment});
+  }
+ }
+ return {ok:issues.length===0,issues};
+}
+export {PAGES,buildSiteFiles,verifySiteFiles};
