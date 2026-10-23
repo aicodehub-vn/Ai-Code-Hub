@@ -13,10 +13,10 @@
   <aside class="sidebar">
     <div class="logo"><span class="glyph">✳</span><span>WEBSITE<br><b>FACTORY</b></span></div>
     <p class="side-label">WORKSPACE / 01</p>
-    <div class="side-nav"><div class="active-nav">◈ <span>Studio Builder</span><small>ACTIVE</small></div><div>▧ <span>Design Library</span></div><div>◇ <span>Pipeline Stations</span><small>V0.5</small></div></div>
+    <div class="side-nav"><div class="active-nav">◈ <span>Studio Builder</span><small>ACTIVE</small></div><div>▧ <span>Design Library</span></div><div>◇ <span>Pipeline Stations</span><small>V0.7</small></div></div>
     <div class="history-title"><span>PROJECT LIBRARY</span><button type="button" id="new-project" title="Tạo dự án mới" aria-label="Tạo dự án mới">＋</button></div>
     <div id="project-list" class="project-list"><p class="empty">Chưa có dự án được lưu.</p></div>
-    <div class="sidebar-bottom"><i></i><span>LOCAL-FIRST ENGINE<small>v0.5 / NO TELEMETRY</small></span></div>
+    <div class="sidebar-bottom"><i></i><span>LOCAL-FIRST ENGINE<small>v0.7 / OPT-IN AI</small></span></div>
   </aside>
   <div class="main">
     <header class="topbar"><div>WORKSPACE <span>/</span> STUDIO BUILDER <span>/</span> <b>EDITOR</b></div><div class="top-right"><span>● NO API KEY REQUIRED</span><strong>WF</strong></div></header>
@@ -24,7 +24,7 @@
       <div class="intro">
         <div><div class="overline">DESIGN OPERATING SYSTEM <span class="step">01 / CREATE</span></div>
           <h1>Biến ý tưởng thành <em>website.</em></h1>
-          <p>Từ một brief đơn giản đến trang web hoàn chỉnh. Tạo mẫu, xem trước và xuất mã HTML — không cần backend.</p>
+          <p>Từ một brief đơn giản đến trang web hoàn chỉnh. Tạo mẫu, xem trước và xuất mã HTML offline. AI đề xuất là tùy chọn qua bridge cục bộ.</p>
         </div><span aria-hidden="true" class="intro-glyph">✳</span>
       </div>
       <main class="panels">
@@ -68,6 +68,19 @@
             </div>
             <button type="button" class="reset-editor" id="reset-content">↺ Khôi phục nội dung theo mẫu ngành</button>
           </details>
+          <details class="ai-workspace" id="ai-workspace">
+            <summary><span>✦ <strong>AI Proposal Review</strong></span><small>OPTIONAL · LOCAL BRIDGE</small></summary>
+            <p class="editor-help">AI chỉ đề xuất nội dung và theme, không tự thay đổi website. Cần chạy AI bridge trên máy và cấu hình nhà cung cấp riêng. Không nhập API key trong trang này.</p>
+            <p id="ai-state" role="status" aria-live="polite" class="ai-status">Đang kiểm tra AI bridge…</p>
+            <label class="ai-consent"><input type="checkbox" id="ai-consent"> <span>Tôi đồng ý gửi <b>tên thương hiệu, brief, loại website, tiêu đề và lựa chọn giao diện</b> tới mô hình đã cấu hình. Không gửi ảnh, email hoặc dữ liệu dự án đã lưu.</span></label>
+            <button type="button" id="ai-request" class="ai-request" disabled>✦ Đề xuất bằng AI</button>
+            <section id="ai-review" class="ai-review" aria-label="Xem trước đề xuất từ AI" hidden>
+              <h3>So sánh đề xuất và bản hiện tại</h3>
+              <p class="editor-help">Chỉ những trường được phép mới xuất hiện. Hãy rà soát mọi tuyên bố do AI viết trước khi chấp nhận.</p>
+              <div id="ai-diff" class="ai-diff"></div>
+              <div class="ai-actions"><button id="ai-apply" type="button" disabled>✓ Chấp nhận đề xuất</button><button id="ai-discard" type="button">Bỏ đề xuất</button></div>
+            </section>
+          </details>
           <details class="section-builder" id="section-builder" open>
             <summary><span>▧ <strong>Section Builder</strong></span><small>DRAG · REORDER · EDIT</small></summary>
             <p class="editor-help">Kéo section để đổi vị trí; trên điện thoại dùng phím ↑ ↓. Các section chính giữ lại để liên kết menu không bị gãy. Bạn có thể thêm/xóa section tùy biến.</p>
@@ -91,7 +104,7 @@
             <div class="asset-actions"><button id="image-upload-button" type="button">＋ Thêm ảnh từ máy</button><input id="image-upload" type="file" accept="image/png,image/jpeg,image/webp" hidden><small id="asset-counter">0/5 IMAGES</small></div>
             <p class="asset-note">Ảnh nhúng làm HTML lớn hơn; mỗi ảnh gốc tối đa 2 MB, thư viện tối đa 5 ảnh. Hãy sử dụng ảnh bạn có quyền khai thác.</p>
           </details>
-          <div class="notice"><span>✦</span><p><b>Generation Engine v0.5</b><br>Hệ thống tạo website theo mẫu cấu hình. Chưa tích hợp LLM, không gửi brief lên máy chủ.</p></div>
+          <div class="notice"><span>✦</span><p><b>Generation Engine v0.7</b><br>Website Builder vẫn chạy offline. AI chỉ được gọi nếu người dùng bật bridge riêng và xác nhận gửi brief.</p></div>
         </section>
         <section class="panel preview-panel" aria-labelledby="preview-title">
           <div class="panel-head"><div><span class="number">02</span><h2 id="preview-title">Live Preview</h2></div><span class="tag ready">● PREVIEW READY</span></div>
