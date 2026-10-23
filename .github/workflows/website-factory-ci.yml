@@ -13,6 +13,29 @@ on:
       - "website-factory/**"
       - ".github/workflows/website-factory-ci.yml"
   workflow_dispatch:
+    inputs:
+      site_name:
+        description: "Tên website"
+        required: false
+        default: "Atelier Siro"
+        type: string
+      category:
+        description: "Loại website"
+        required: false
+        default: "agency"
+        type: choice
+        options: [agency, restaurant, saas, portfolio]
+      theme:
+        description: "Bảng màu"
+        required: false
+        default: "nocturne"
+        type: choice
+        options: [nocturne, paper, signal, forest]
+      brief:
+        description: "Nội dung mô tả (không nhập dữ liệu bí mật)"
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -32,6 +55,22 @@ jobs:
         run: |
           node --check website-factory/engine.mjs
           node --check website-factory/app.mjs
+          node --check website-factory/pipeline.mjs
+          node --check website-factory/factory-cli.mjs
           node --check website-factory/tests/engine.test.mjs
       - name: Run tests
         run: node --test website-factory/tests/*.test.mjs
+      - name: Produce static website artifact
+        env:
+          FACTORY_NAME: ${{ inputs.site_name }}
+          FACTORY_CATEGORY: ${{ inputs.category }}
+          FACTORY_THEME: ${{ inputs.theme }}
+          FACTORY_BRIEF: ${{ inputs.brief }}
+        run: node website-factory/factory-cli.mjs
+      - name: Upload generated website and quality report
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-factory-output
+          path: website-factory/dist/
+          if-no-files-found: error
+          retention-days: 7
