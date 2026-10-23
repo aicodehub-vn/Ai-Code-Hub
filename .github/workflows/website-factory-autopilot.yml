@@ -1,0 +1,151 @@
+name: Website Factory Autopilot
+
+on:
+  push:
+    branches: [main, "feat/website-factory-**"]
+    paths:
+      - website-factory/autopilot.recipe.json
+      - website-factory/factory-autopilot.mjs
+      - website-factory/tests/autopilot.test.mjs
+      - website-factory/tests/e2e/autopilot.spec.mjs
+      - .github/workflows/website-factory-autopilot.yml
+  pull_request:
+    paths:
+      - website-factory/autopilot.recipe.json
+      - website-factory/factory-autopilot.mjs
+      - website-factory/tests/autopilot.test.mjs
+      - website-factory/tests/e2e/autopilot.spec.mjs
+      - .github/workflows/website-factory-autopilot.yml
+  workflow_dispatch:
+    inputs:
+      ai_mode:
+        description: "AI: off, optional (fallback), or required (fail closed)"
+        required: true
+        default: "off"
+        type: choice
+        options: [off, optional, required]
+      enable_remote_ai:
+        description: "Allow model calls with configured repository variables/secrets"
+        required: true
+        default: false
+        type: boolean
+      publish_release:
+        description: "Publish generated ZIP as a public GitHub Release (main only)"
+        required: true
+        default: false
+        type: boolean
+  repository_dispatch:
+    types: [website-factory-build]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-factory-autopilot-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Intake → AI → Build → QA → Bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Unit and security regression
+        run: |
+          node --check website-factory/factory-autopilot.mjs
+          node --test website-factory/tests/*.test.mjs
+      - name: Run unattended production
+        env:
+          # Push/PR/repository_dispatch always run offline; no unapproved billable calls.
+          FACTORY_AI_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.ai_mode || 'off' }}
+          FACTORY_AI_ENABLED: ${{ github.event_name == 'workflow_dispatch' && inputs.enable_remote_ai && '1' || '0' }}
+          FACTORY_AI_API_URL: ${{ vars.FACTORY_AI_API_URL }}
+          FACTORY_AI_MODEL: ${{ vars.FACTORY_AI_MODEL }}
+          FACTORY_AI_API_KEY: ${{ secrets.FACTORY_AI_API_KEY }}
+        run: node website-factory/factory-autopilot.mjs --config website-factory/autopilot.recipe.json
+      - name: Independently verify website package and report
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, zipfile
+          folder = pathlib.Path("website-factory/autopilot-dist")
+          result = json.loads((folder/"quality-report.json").read_text(encoding="utf-8"))
+          assert result["passed"] is True
+          assert result["issues"] == []
+          assert all(item["pass"] for item in result["checks"])
+          assert result["pages"]
+          with zipfile.ZipFile(folder/"site.zip") as package:
+              assert package.testzip() is None
+              assert sorted(package.namelist()) == sorted(result["pages"])
+              for name in result["pages"]:
+                  contents = (folder/name).read_bytes()
+                  assert b"<!doctype html>" in contents.lower()
+                  assert package.read(name) == contents
+          print("AUTOPILOT PACKAGE PASS:", result["pages"])
+          PY
+      - name: Upload generated HTML, ZIP and QA evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-factory-autopilot-site
+          path: website-factory/autopilot-dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  browser-smoke:
+    name: Chromium → generated site smoke
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/download-artifact@v4
+        with:
+          name: website-factory-autopilot-site
+          path: website-factory/autopilot-dist
+      - name: Install browser test runner
+        working-directory: website-factory
+        run: npm install --no-save --no-package-lock --ignore-scripts @playwright/test@1.64.1
+      - name: Install Chromium
+        working-directory: website-factory
+        run: npx playwright install --with-deps chromium
+      - name: Smoke-test generated production website
+        working-directory: website-factory
+        env:
+          FACTORY_AUTOPILOT_SMOKE: "1"
+        run: npx playwright test tests/e2e/autopilot.spec.mjs --config playwright.config.mjs --project chromium
+      - name: Upload production website screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-factory-autopilot-review
+          path: website-factory/playwright-autopilot-screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  publish-release:
+    name: Publish ZIP release · explicit opt-in only
+    needs: [build, browser-smoke]
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_release == true && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: website-factory-autopilot-site
+          path: output
+      - name: Publish site package (not live hosting)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "website-factory-${{ github.run_id }}" \
+            output/site.zip output/quality-report.json \
+            --title "Website Factory automatic build #${{ github.run_number }}" \
+            --notes "Unattended website output. Recipe-driven, QA-gated, and explicitly published from the main branch. This is a downloadable release, not a deployed live website."
