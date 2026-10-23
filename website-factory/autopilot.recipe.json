@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "project": {
+    "name": "Atelier Siro",
+    "category": "agency",
+    "headline": "Ý tưởng thành trải nghiệm",
+    "brief": "Studio thiết kế website và trải nghiệm số, tập trung vào giao diện rõ ràng, tốc độ và tính dễ sử dụng.",
+    "theme": "nocturne",
+    "layout": "split",
+    "motion": "subtle",
+    "extraPages": [
+      "about",
+      "services",
+      "contact"
+    ],
+    "email": ""
+  },
+  "automation": {
+    "aiMode": "off"
+  }
+}
