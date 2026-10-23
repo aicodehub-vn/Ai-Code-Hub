@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0e1215">
+  <meta name="description" content="Website Factory: tạo mẫu website theo brief, xem trước và xuất HTML ngay trong trình duyệt.">
+  <title>Website Factory — Design Production Studio</title>
+  <link rel="stylesheet" href="./studio.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo"><span class="glyph">✳</span><span>WEBSITE<br><b>FACTORY</b></span></div>
+    <p class="side-label">WORKSPACE / 01</p>
+    <div class="side-nav"><div class="active-nav">◈ <span>Studio Builder</span><small>ACTIVE</small></div><div>▧ <span>Design Library</span></div><div>◇ <span>Pipeline Stations</span><small>V0.8</small></div></div>
+    <div class="history-title"><span>PROJECT LIBRARY</span><button type="button" id="new-project" title="Tạo dự án mới" aria-label="Tạo dự án mới">＋</button></div>
+    <div id="project-list" class="project-list"><p class="empty">Chưa có dự án được lưu.</p></div>
+    <div class="sidebar-bottom"><i></i><span>LOCAL-FIRST ENGINE<small>v0.8 / OPT-IN AI</small></span></div>
+  </aside>
+  <div class="main">
+    <header class="topbar"><div>WORKSPACE <span>/</span> STUDIO BUILDER <span>/</span> <b>EDITOR</b></div><div class="top-right"><span>● NO API KEY REQUIRED</span><strong>WF</strong></div></header>
+    <div class="workspace">
+      <div class="intro">
+        <div><div class="overline">DESIGN OPERATING SYSTEM <span class="step">01 / CREATE</span></div>
+          <h1>Biến ý tưởng thành <em>website.</em></h1>
+          <p>Từ một brief đơn giản đến trang web hoàn chỉnh. Tạo mẫu, xem trước và xuất mã HTML offline. AI đề xuất là tùy chọn qua bridge cục bộ.</p>
+        </div><span aria-hidden="true" class="intro-glyph">✳</span>
+      </div>
+      <main class="panels">
+        <section class="panel config" aria-labelledby="input-title">
+          <div class="panel-head"><div><span class="number">01</span><h2 id="input-title">Creative Brief</h2></div><span class="tag">INPUT</span></div>
+          <form id="builder-form">
+            <label for="name">TÊN DỰ ÁN / THƯƠNG HIỆU</label>
+            <input id="name" name="name" maxlength="70" required placeholder="Tên dự án của bạn" value="Atelier Siro">
+            <label for="category">LOẠI WEBSITE</label>
+            <select id="category" name="category"><option value="agency">Creative Studio / Agency</option><option value="restaurant">Restaurant & Café</option><option value="saas">SaaS / Tech Product</option><option value="portfolio">Personal Portfolio</option></select>
+            <label for="headline">TIÊU ĐỀ CHÍNH <span>(TÙY CHỌN)</span></label>
+            <input id="headline" name="headline" maxlength="130" placeholder="Để trống để dùng đề xuất">
+            <label for="brief">MÔ TẢ Ý TƯỞNG / CREATIVE BRIEF</label>
+            <textarea id="brief" name="brief" maxlength="450" rows="5" placeholder="Sản phẩm, dịch vụ, phong cách, khách hàng mục tiêu...">Một studio thiết kế trải nghiệm số, nơi nghệ thuật và công nghệ gặp nhau.</textarea>
+            <div class="two-col">
+              <div><label for="theme">BẢNG MÀU</label>
+                <select id="theme" name="theme"><option value="nocturne">Nocturne / Dark</option><option value="paper">Paper / Light</option><option value="signal">Signal / Future</option><option value="forest">Forest / Organic</option></select></div>
+              <div><label for="accent">MÀU NHẤN</label><div class="color-field"><input id="accent" name="accent" type="color" value="#e9b47b"><button type="button" id="reset-color">Reset</button></div></div>
+            </div>
+            <label for="layout">BỐ CỤC HERO</label>
+            <select id="layout" name="layout"><option value="split">Split / Editorial</option><option value="centered">Centered / Statement</option></select>
+            <label for="motion">ANIMATION</label>
+            <select id="motion" name="motion"><option value="off">Off — không chuyển động</option><option value="subtle" selected>Subtle — mượt, tiết chế</option><option value="expressive">Expressive — chuyển động mạnh hơn</option></select>
+            <label for="email">EMAIL LIÊN HỆ <span>(TÙY CHỌN)</span></label>
+            <input id="email" name="email" type="email" maxlength="120" placeholder="hello@example.com">
+            <button class="generate" type="submit"><span>✳ Tạo / cập nhật website</span><span>↗</span></button>
+          </form>
+          <details class="content-editor" id="content-editor">
+            <summary><span>▤ <strong>Visual Content Editor</strong></span><small>7 KHỐI + 3 DỊCH VỤ</small></summary>
+            <p class="editor-help">Sửa từng nội dung rồi xem thay đổi ở khung Preview. Mọi chữ nhập vào sẽ được xử lý như văn bản, không thực thi mã HTML.</p>
+            <div class="editor-fields" id="editor-fields">
+              <label for="edit-sectionTitle">TIÊU ĐỀ DỊCH VỤ</label><input id="edit-sectionTitle" data-content="sectionTitle" maxlength="160">
+              <label for="edit-sectionIntro">MÔ TẢ DỊCH VỤ</label><textarea id="edit-sectionIntro" data-content="sectionIntro" maxlength="450" rows="2"></textarea>
+              <div class="service-heading">01 / CARD EDITOR</div>
+              <div id="service-fields" class="service-fields"></div>
+              <label for="edit-aboutTitle">TIÊU ĐỀ GIỚI THIỆU</label><input id="edit-aboutTitle" data-content="aboutTitle" maxlength="160">
+              <label for="edit-aboutText">NỘI DUNG GIỚI THIỆU</label><textarea id="edit-aboutText" data-content="aboutText" maxlength="450" rows="3"></textarea>
+              <label for="edit-contactTitle">TIÊU ĐỀ LIÊN HỆ</label><input id="edit-contactTitle" data-content="contactTitle" maxlength="160">
+              <label for="edit-contactText">MÔ TẢ LIÊN HỆ</label><input id="edit-contactText" data-content="contactText" maxlength="160">
+              <label for="edit-ctaLabel">NHÃN NÚT HERO</label><input id="edit-ctaLabel" data-content="ctaLabel" maxlength="160">
+            </div>
+            <button type="button" class="reset-editor" id="reset-content">↺ Khôi phục nội dung theo mẫu ngành</button>
+          </details>
+          <details class="ai-workspace" id="ai-workspace">
+            <summary><span>✦ <strong>AI Proposal Review</strong></span><small>OPTIONAL · LOCAL BRIDGE</small></summary>
+            <p class="editor-help">AI chỉ đề xuất nội dung và theme, không tự thay đổi website. Bridge mặc định giới hạn 6 yêu cầu/phút và 1 yêu cầu đang xử lý; số lượt có thể cấu hình. Không nhập API key trong trang này.</p>
+            <p id="ai-state" role="status" aria-live="polite" class="ai-status">Đang kiểm tra AI bridge…</p>
+            <label class="ai-consent"><input type="checkbox" id="ai-consent"> <span>Tôi đồng ý gửi <b>tên thương hiệu, brief, loại website, tiêu đề và lựa chọn giao diện</b> tới mô hình đã cấu hình. Không gửi ảnh, email hoặc dữ liệu dự án đã lưu.</span></label>
+            <button type="button" id="ai-request" class="ai-request" disabled>✦ Đề xuất bằng AI</button>
+            <section id="ai-review" class="ai-review" aria-label="Xem trước đề xuất từ AI" hidden>
+              <h3>So sánh đề xuất và bản hiện tại</h3>
+              <p class="editor-help">Chỉ những trường được phép mới xuất hiện. Hãy rà soát mọi tuyên bố do AI viết trước khi chấp nhận.</p>
+              <div id="ai-diff" class="ai-diff"></div>
+              <div class="ai-actions"><button id="ai-apply" type="button" disabled>✓ Chấp nhận đề xuất</button><button id="ai-discard" type="button">Bỏ đề xuất</button></div>
+            </section>
+          </details>
+          <details class="section-builder" id="section-builder" open>
+            <summary><span>▧ <strong>Section Builder</strong></span><small>DRAG · REORDER · EDIT</small></summary>
+            <p class="editor-help">Kéo section để đổi vị trí; trên điện thoại dùng phím ↑ ↓. Các section chính giữ lại để liên kết menu không bị gãy. Bạn có thể thêm/xóa section tùy biến.</p>
+            <ol id="section-list" class="section-list" aria-label="Thứ tự các section"></ol>
+            <div class="layout-add"><select id="add-section-type" aria-label="Loại section mới"><option value="statement">Statement</option><option value="quote">Trích dẫn</option><option value="gallery">Gallery</option><option value="faq">FAQ / Hỏi đáp</option><option value="pricing">Pricing / Bảng giá</option><option value="team">Team / Đội ngũ</option></select><button type="button" id="add-section">＋ Thêm section</button><small id="layout-counter">0/8 CUSTOM</small></div>
+          </details>
+          <details class="bundle-settings" id="bundle-settings">
+            <summary><span>▧ <strong>Multi-page Export</strong></span><small>STATIC ZIP · OFFLINE</small></summary>
+            <p class="editor-help">Chọn các trang phụ cần tạo. Trang chính vẫn giữ tất cả section và liên kết nội bộ; những trang dưới đây có nội dung và cấu trúc HTML riêng.</p>
+            <div class="pages-options" id="pages-options">
+              <label><input type="checkbox" data-page="about"> Giới thiệu <small>about.html</small></label>
+              <label><input type="checkbox" data-page="services"> Dịch vụ <small>services.html</small></label>
+              <label><input type="checkbox" data-page="contact"> Liên hệ <small>contact.html</small></label>
+            </div>
+          </details>
+          <details class="asset-library" id="asset-library">
+            <summary><span>▧ <strong>Asset Library</strong></span><small>LOCAL IMAGES ONLY</small></summary>
+            <p class="editor-help">Ảnh PNG/JPEG/WebP được nén ngay trên máy rồi nhúng vào HTML. Không upload ảnh lên server, không dùng URL ngoài.</p>
+            <div class="asset-controls"><label for="hero-asset">ẢNH HERO</label><select id="hero-asset"><option value="">Hình khối mặc định</option></select></div>
+            <div id="asset-list" class="asset-list"></div>
+            <div class="asset-actions"><button id="image-upload-button" type="button">＋ Thêm ảnh từ máy</button><input id="image-upload" type="file" accept="image/png,image/jpeg,image/webp" hidden><small id="asset-counter">0/5 IMAGES</small></div>
+            <p class="asset-note">Ảnh nhúng làm HTML lớn hơn; mỗi ảnh gốc tối đa 2 MB, thư viện tối đa 5 ảnh. Hãy sử dụng ảnh bạn có quyền khai thác.</p>
+          </details>
+          <div class="notice"><span>✦</span><p><b>Generation Engine v0.8</b><br>Website Builder vẫn chạy offline. AI chỉ được gọi nếu người dùng bật bridge riêng và xác nhận gửi brief.</p></div>
+        </section>
+        <section class="panel preview-panel" aria-labelledby="preview-title">
+          <div class="panel-head"><div><span class="number">02</span><h2 id="preview-title">Live Preview</h2></div><span class="tag ready">● PREVIEW READY</span></div>
+          <div class="preview-toolbar"><span id="preview-url" class="preview-url">◉ preview.local / atelier-siro</span>
+            <div class="devices" role="group" aria-label="Kích thước xem trước">
+              <button type="button" data-device="desktop" class="device selected" aria-pressed="true">▣ Desktop</button>
+              <button type="button" data-device="mobile" class="device" aria-pressed="false">▯ Mobile</button>
+            </div>
+          </div>
+          <div id="preview-stage" class="preview-stage"><iframe title="Bản xem trước website đã tạo" id="preview-frame" sandbox="" loading="eager"></iframe></div>
+          <div class="edit-history" role="group" aria-label="Lịch sử chỉnh sửa">
+            <span>HISTORY / CURRENT SESSION</span>
+            <button id="undo-edit" type="button" disabled title="Hoàn tác lần chỉnh sửa gần nhất">↶ Hoàn tác</button>
+            <button id="redo-edit" type="button" disabled title="Làm lại thao tác đã hoàn tác">↷ Làm lại</button>
+          </div>
+          <div class="preview-bottom"><span class="preview-status"><i></i><span id="status" role="status" aria-live="polite">Đã tạo trang mẫu</span></span><span>RESPONSIVE · STATIC HTML</span></div>
+          <div class="actions">
+            <button id="export-html" type="button" class="export">↓ Xuất HTML</button>
+            <button id="export-zip" type="button" class="export">↓ Website ZIP</button>
+            <button id="copy-html" type="button" class="outline">⧉ Sao chép mã</button>
+            <button id="save-project" type="button" class="outline">⌑ Lưu dự án</button>
+            <button id="export-json" type="button" class="outline">↓ Backup JSON</button>
+            <button id="import-json-button" type="button" class="outline">↑ Import JSON</button>
+            <input id="import-json-file" type="file" accept=".json,application/json" hidden aria-label="Chọn tệp JSON của Website Factory">
+          </div>
+          <div class="pipeline"><span>↗</span><div><b>Production pipeline</b><p>Creative Brief → Theme Engine → Section Builder → AI Proposal Review (tùy chọn) → QA → HTML/ZIP Export. AI chỉ gợi ý nội dung, không tự viết mã hoặc xuất bản website.</p></div></div>
+        </section>
+      </main>
+      <section class="orchestration panel" aria-labelledby="graph-title">
+        <div class="panel-head"><div><span class="number">03</span><h2 id="graph-title">Agent Workspace <small class="graph-subtitle">/ RULE-BASED PIPELINE</small></h2></div><button type="button" class="run-pipeline" id="run-pipeline">▶ Chạy kiểm định</button></div>
+        <div class="graph-intro"><p>7 công đoạn có kết quả thật; luồng nối cố định, không mô phỏng AI tự chủ. Bấm vào từng công đoạn để xem trạng thái và đầu ra.</p><span class="graph-legend">● PASS <span>● SKIPPED</span> ● BLOCKED</span></div>
+        <div class="graph-scroll"><div class="graph-nodes" id="graph-nodes" aria-label="Các công đoạn Website Factory">
+          <button type="button" class="graph-node" data-agent="brief"><span class="agent-glyph">◈</span><small>01 / INTAKE</small><strong>Brief</strong><span class="node-state">WAITING</span></button>
+          <button type="button" class="graph-node" data-agent="design"><span class="agent-glyph">✳</span><small>02 / DESIGN</small><strong>Design</strong><span class="node-state">WAITING</span></button>
+          <button type="button" class="graph-node" data-agent="content"><span class="agent-glyph">▤</span><small>03 / EDITOR</small><strong>Content</strong><span class="node-state">WAITING</span></button>
+          <button type="button" class="graph-node" data-agent="build"><span class="agent-glyph">⌘</span><small>04 / BUILD</small><strong>Builder</strong><span class="node-state">WAITING</span></button>
+          <button type="button" class="graph-node" data-agent="qa"><span class="agent-glyph">◇</span><small>05 / VERIFY</small><strong>QA Gate</strong><span class="node-state">WAITING</span></button>
+          <button type="button" class="graph-node" data-agent="repair"><span class="agent-glyph">↺</span><small>06 / RECOVER</small><strong>Repair</strong><span class="node-state">WAITING</span></button>
+          <button type="button" class="graph-node" data-agent="export"><span class="agent-glyph">↗</span><small>07 / OUTPUT</small><strong>Export</strong><span class="node-state">WAITING</span></button>
+        </div></div>
+        <div class="pipeline-report"><div class="agent-inspector"><div class="report-label">SELECTED STATION</div><h3 id="agent-title">Brief Intake</h3><p id="agent-detail">Chọn công đoạn hoặc nhấn Chạy kiểm định.</p></div><div class="qa-inspector"><div class="report-label">QUALITY REPORT</div><h3 id="qa-score">CHƯA KIỂM TRA</h3><ul id="qa-results" aria-label="Danh sách kiểm tra"></ul><p id="qa-warning" class="qa-warning"></p></div></div>
+      </section>
+      <footer><span>WEBSITE FACTORY © 2026</span><span>LOCAL-FIRST · ACCESSIBLE · PRIVACY BY DESIGN</span></footer>
+    </div>
+  </div>
+</div>
+<script type="module" src="./app.mjs"></script>
+</body>
+</html>

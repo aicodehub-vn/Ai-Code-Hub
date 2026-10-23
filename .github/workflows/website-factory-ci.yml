@@ -1,0 +1,173 @@
+name: Website Factory CI
+
+on:
+  push:
+    branches:
+      - main
+      - feat/website-factory-**
+    paths:
+      - "website-factory/**"
+      - ".github/workflows/website-factory-ci.yml"
+  pull_request:
+    paths:
+      - "website-factory/**"
+      - ".github/workflows/website-factory-ci.yml"
+  workflow_dispatch:
+    inputs:
+      site_name:
+        description: "Tên website"
+        required: false
+        default: "Atelier Siro"
+        type: string
+      category:
+        description: "Loại website"
+        required: false
+        default: "agency"
+        type: choice
+        options: [agency, restaurant, saas, portfolio]
+      theme:
+        description: "Bảng màu"
+        required: false
+        default: "nocturne"
+        type: choice
+        options: [nocturne, paper, signal, forest]
+      motion:
+        description: "Animation"
+        required: false
+        type: choice
+        default: subtle
+        options: [off, subtle, expressive]
+      pages:
+        description: "Trang phụ, ngăn cách bằng dấu phẩy: about,services,contact"
+        required: false
+        type: string
+        default: ""
+      brief:
+        description: "Nội dung mô tả (không nhập dữ liệu bí mật)"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Check source and run tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check JavaScript syntax
+        run: |
+          node --check website-factory/engine.mjs
+          node --check website-factory/app.mjs
+          node --check website-factory/history.mjs
+          node --check website-factory/ai-contract.mjs
+          node --check website-factory/ai-ui.mjs
+          node --check website-factory/ai-server.mjs
+          node --check website-factory/layout.mjs
+          node --check website-factory/layout-editor.mjs
+          node --check website-factory/site-bundle.mjs
+          node --check website-factory/styles-extra.mjs
+          node --check website-factory/zip.mjs
+          node --check website-factory/pipeline.mjs
+          node --check website-factory/factory-cli.mjs
+          node --check website-factory/tests/engine.test.mjs
+      - name: Run tests
+        run: node --test website-factory/tests/*.test.mjs
+      - name: Verify ZIP interoperability and multiple pages
+        run: |
+          node --input-type=module <<'NODE'
+          import {writeFileSync} from "node:fs";
+          import {buildSiteFiles,verifySiteFiles} from "./website-factory/site-bundle.mjs";
+          import {createZip} from "./website-factory/zip.mjs";
+          const {files}=buildSiteFiles({name:"CI bundle",extraPages:["about","services","contact"]});
+          if(!verifySiteFiles(files).ok)throw new Error("Bundle QA failed");
+          writeFileSync("/tmp/website-factory-zip-check.zip",createZip(files));
+          NODE
+          python3 - <<'PY'
+          import zipfile
+          with zipfile.ZipFile("/tmp/website-factory-zip-check.zip") as archive:
+              assert sorted(archive.namelist()) == sorted(["index.html","about.html","services.html","contact.html"])
+              assert archive.testzip() is None
+              for name in archive.namelist():
+                  assert b"<!doctype html>" in archive.read(name).lower()
+          print("ZIP archive verified with Python zipfile")
+          PY
+      - name: Produce static website artifact
+        env:
+          FACTORY_NAME: ${{ inputs.site_name }}
+          FACTORY_CATEGORY: ${{ inputs.category }}
+          FACTORY_THEME: ${{ inputs.theme }}
+          FACTORY_BRIEF: ${{ inputs.brief }}
+          FACTORY_MOTION: ${{ inputs.motion }}
+          FACTORY_PAGES: ${{ inputs.pages }}
+        run: node website-factory/factory-cli.mjs
+      - name: Upload generated website and quality report
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-factory-output
+          path: website-factory/dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  browser-e2e:
+    name: Chromium · Firefox · WebKit / Visual QA
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Checkout pinned V0.5 visual baseline (read-only)
+        uses: actions/checkout@v4
+        with:
+          ref: 4977889c87ec93b0324d58699b9c63fb8e74fdb0
+          path: reference
+          persist-credentials: false
+      - name: Install browser test runner (test-only)
+        working-directory: website-factory
+        run: npm install --no-save --no-package-lock --ignore-scripts @playwright/test@1.64.1 @axe-core/playwright@4.10.2 pixelmatch@6.0.0 pngjs@7.0.0
+      - name: Install Chromium, Firefox and WebKit dependencies
+        working-directory: website-factory
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: Browser E2E, visual diff and WCAG/performance audits
+        working-directory: website-factory
+        env:
+          FACTORY_VISUAL_BASELINE: "1"
+        run: npx playwright test --config playwright.config.mjs
+      - name: Upload desktop and mobile review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-factory-browser-preview
+          path: website-factory/playwright-snapshots/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload visual regression images and accessibility/performance reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-factory-quality-audits
+          path: |
+            website-factory/playwright-visual-diffs/
+            website-factory/playwright-audits/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload failed browser traces and screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-factory-browser-failures
+          path: |
+            website-factory/playwright-results/
+            website-factory/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7

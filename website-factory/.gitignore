@@ -1,0 +1,9 @@
+dist/
+.DS_Store
+*.log
+node_modules/
+playwright-report/
+playwright-results/
+test-results/
+autopilot-dist/
+playwright-autopilot-screenshots/
