@@ -18,7 +18,7 @@ function validateHtml(html){
   const match=/\bsrc="(data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})"/i.exec(tag);
   return Boolean(match)&&match[1].length<=320000;
  });
- const forbiddenElements=/<(?:script|iframe|link|object|embed|video|audio|source)\b|\bon[a-z]+\s*=|@import\s|url\(\s*['"]?https?:/i.test(text);
+ const forbiddenElements=/<(?:script|iframe|link|object|embed|video|audio|source|svg|base)\b|\bon[a-z]+\s*=|\bsrcset\s*=|@import\s|url\(\s*['"]?(?:https?:|\/\/)/i.test(text);
 
  const rules=[
   ["doctype",/^\s*<!doctype html>/i.test(text),"Tài liệu có DOCTYPE HTML5"],
