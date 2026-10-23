@@ -52,7 +52,13 @@ async function executeAutopilot(recipe,options={}){
  if(mode==="off"){
   stage("ai","skipped","Offline deterministic generation; no model request");
  }else{
-  const cfg=options.providerConfig||configFromEnv(options.env||process.env);
+  let cfg;
+  try{cfg=options.providerConfig||configFromEnv(options.env||process.env)}
+  catch{
+   if(mode==="required")throw new Error("AI required but provider settings are invalid");
+   cfg={enabled:false};
+   warnings.push("AI provider settings invalid; skipped model request");
+  }
   if(!cfg.enabled){
    if(mode==="required")throw new Error("AI required but provider is not configured");
    aiFallback=true;
