@@ -4,6 +4,7 @@ import {STATIONS,runPipeline} from "./pipeline.mjs";
 import {buildSiteFiles,verifySiteFiles} from "./site-bundle.mjs";
 import {createZip} from "./zip.mjs";
 import {createHistory} from "./history.mjs";
+import {initAIStudio} from "./ai-ui.mjs";
 
 const KEY="website-factory.projects.v1";
 const MAX_BACKUP_BYTES=1800000;
@@ -302,3 +303,4 @@ else fill({name:"Atelier Siro",brief:"Một studio thiết kế trải nghiệm 
 editHistory.reset(values());
 renderList();
 preview("Đã tạo trang mẫu — mọi thứ chạy tại trình duyệt",false);
+initAIStudio({values,fill,preview,notify});
