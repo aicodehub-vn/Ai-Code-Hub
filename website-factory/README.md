@@ -1,85 +1,87 @@
-# WEBSITE FACTORY — v0.4 · Local-first Production Workspace
+# Website Factory — V0.5
 
-Website Factory là nhà máy tạo website tĩnh từ brief, **không tốn tiền AI/API**. V0.4 vận hành bằng 7 công đoạn có QA gate thật. Không mô phỏng đây là các AI Agent tự chủ: toàn bộ là **deterministic workers**, có thể thay thế bằng LLM adapter có xác thực trong bản sau.
+Nhà máy tạo website tĩnh **local-first** chạy trong trình duyệt. Phần sinh website không cần API, LLM, đăng nhập, CDN hay backend. Các trạm "Agent Workspace" hiện vẫn là **workers theo quy tắc**, không phải AI Agent tự trị.
 
-## Đã có
-- Tạo website đơn trang từ 4 mẫu ngành: Agency / Restaurant / SaaS / Portfolio.
-- 4 palette, màu nhấn HEX, 2 layout, xem trước desktop/mobile trong iframe sandbox.
-- Content Editor: thay tiêu đề section, giới thiệu, contact, CTA và 3 card dịch vụ; live preview.
-- **Section Builder**: thêm tối đa 8 block mới (statement, quote, gallery, FAQ, pricing, team), xóa block tùy biến, kéo thả hoặc dùng phím lên/xuống để sắp xếp tất cả section. Section nền tảng luôn giữ để liên kết điều hướng hoạt động.
-- **Asset Library**: tải PNG/JPEG/WebP từ máy, xử lý trên canvas để nhúng vào HTML dạng data URL; tối đa 5 ảnh, file nguồn <= 2 MB, chiều ảnh tối đa 40 MP khi giải mã. Chọn ảnh cho Hero hoặc Gallery, chỉnh alt text, xóa ảnh không dùng.
-- **Motion Controls**: Off / Subtle / Expressive (CSS-only, ưu tiên prefers-reduced-motion, không cần JS trong website xuất).
-- **Multi-page ZIP**: có thể chọn tối đa 3 trang phụ about.html, services.html, contact.html. Menu trang chính tự liên kết các trang có tạo; trang phụ chứa nội dung riêng và có đường về trang chủ. ZIP dùng phương pháp STORE (không nén thêm) và bộ tạo CRC32 nội bộ, không có dependency.
-- **Tương thích cũ**: các dự án JSON v0.1/v0.2 không có layoutSpec hoặc assets vẫn mở được. Backup giữ thứ tự section và ảnh nhúng, dung lượng tối đa 1.8 MB.
-- Agent Workspace: Brief → Design → Content → Build → QA → Repair → Export; xem trạng thái và lý do từng công đoạn.
-- QA Gate 10 quy tắc: HTML5, lang, viewport, SEO description, H1, landmarks, internal anchors, standalone resources, responsive/reduced-motion, style block.
-- Repair Worker: nếu builder trả HTML lỗi QA, thử phục hồi đúng 1 lần từ renderer chuẩn; nếu vẫn lỗi, chặn export.
-- Lưu 25 cấu hình trên trình duyệt; export/import JSON có phiên bản schema 1; tải HTML một file tự chứa CSS.
-- CLI zero-dependency và GitHub Actions sinh file `index.html` + `quality-report.json` dưới artifact `website-factory-output` (retention 7 ngày).
+## Trải nghiệm hiện có
 
-## Chạy giao diện cục bộ
-Module ES trong trình duyệt cần server HTTP. Tại thư mục gốc repo, chạy:
+- Creative Brief: 4 mẫu ngành (agency / restaurant / SaaS / portfolio), 4 palette, màu accent HEX, bố cục hero split/centered, tùy chọn motion Off/Subtle/Expressive. CSS xuất ra luôn hỗ trợ `prefers-reduced-motion`.
+- Visual Content Editor: sửa hero, section, mô tả, 3 card, CTA, nội dung liên hệ.
+- Section Builder: 3 section cơ sở và tối đa 8 section tùy biến; Statement, Quote, Gallery, FAQ, Pricing, Team. Kéo thả desktop hoặc dùng nút ↑/↓ để sắp xếp.
+- Asset Library: tải PNG/JPEG/WebP có quyền sử dụng, xử lý trên trình duyệt rồi nhúng thành data URL; giới hạn 5 ảnh và 2 MB/ảnh nguồn; dùng cho Hero/Gallery.
+- **Undo / Redo**: lưu tối đa 12 snapshot phiên làm việc, bao gồm cấu hình, section và media. Không ghi lịch sử này lên mạng; đổi dự án sẽ bắt đầu lịch sử mới.
+- Live Preview desktop/mobile trong `iframe sandbox=""`, không cho phép chạy script.
+- Export 1 HTML tự chứa CSS hoặc ZIP nhiều trang gồm `index.html`, và tùy chọn `about.html`, `services.html`, `contact.html`. ZIP dùng STORE và CRC32, không thư viện runtime.
+- Lưu tối đa 25 dự án vào localStorage, backup/import JSON v1. Nội dung ảnh được giữ trong backup. Nếu hết quota localStorage, hãy xuất backup thay vì dựa vào bộ nhớ trình duyệt.
+
+## Chạy Studio
+
+Khởi động static server từ **thư mục gốc của repository**, rồi mở `http://localhost:8000/website-factory/`:
+
 ```bash
 python -m http.server 8000
 ```
-Sau đó mở `http://localhost:8000/website-factory/`. **Không khuyến nghị mở index.html bằng file://** do browser có thể chặn import module.
 
-## Sử dụng
-1. Điền Creative Brief và chọn category/palette/layout.
-2. Mở **Visual Content Editor** để chỉnh chữ, sau đó **Section Builder** để thêm, xóa hoặc thay vị trí các block. Mở **Asset Library** để thêm ảnh cục bộ cho Hero/Gallery. Nội dung được escape; không nhận raw HTML.
-3. Theo dõi Live Preview và **Agent Workspace**. Nhấn **Chạy kiểm định** để xem QA. Chọn từng node để đọc chi tiết.
-4. Chọn các trang phụ trong **Multi-page Export**, đặt animation trong Creative Brief. Xuất **HTML** một trang hoặc **Website ZIP** gồm các trang đã chọn; Backup JSON chứa cấu hình và ảnh. Export chặn khi QA không đạt.
-5. Xuất bản thủ công bằng static hosting bạn chọn; công cụ không tự đăng hoặc tạo tên miền.
+Trên Windows có thể dùng `py -m http.server 8000`. Không mở trực tiếp bằng `file://`, vì trình duyệt có thể chặn ES Modules.
 
-## Production từ GitHub Actions
-- Vào **Actions > Website Factory CI**. Sau khi workflow đã có ở nhánh mặc định, chọn **Run workflow**, nhập tên/category/theme/brief (không nhập bí mật).
-- Sau khi job thành công, tải artifact **website-factory-output** gồm `index.html` và `quality-report.json`.
-- Khi workflow chỉ còn trên feature branch/PR mà chưa merge, nút `Run workflow` có thể chưa hiện ở giao diện Actions. Push và PR vẫn tự chạy job/đính kèm artifact.
+1. Tạo website bằng Creative Brief, chọn màu và motion.
+2. Mở Content Editor / Section Builder để chỉnh nội dung và thứ tự section; dùng Asset Library để thêm ảnh của mình.
+3. Bấm **Chạy kiểm định** để xem từng trạm và Quality Report. QA phải đạt trước khi xuất.
+4. Dùng **Hoàn tác / Làm lại** khi đang chỉnh; nhấn **Lưu dự án** để lưu trong máy. Dùng **Backup JSON** trước khi dọn dữ liệu trình duyệt.
+5. Dùng **Xuất HTML** hoặc **Website ZIP**, giải nén rồi đưa các tệp HTML lên dịch vụ hosting tĩnh. Công cụ không tự phát hành website.
 
-Bạn cũng có thể chạy thủ công:
+## Kiểm thử và nghiệm thu
+
+### Kiểm thử cấu trúc và đóng gói (không phụ thuộc npm)
+
 ```bash
+node --check website-factory/engine.mjs
+node --test website-factory/tests/*.test.mjs
 node website-factory/factory-cli.mjs
 node website-factory/factory-cli.mjs --config my-project.factory.json
-node --test website-factory/tests/*.test.mjs
 ```
-Tệp đầu ra được ghi vào `website-factory/dist/`. `--config` nhận cấu hình thường hoặc bản sao lưu `{schemaVersion:1,config:{...}}`.
 
-## Bảo mật và giới hạn
-- Website xuất không có JS/CDN/ảnh remote. Hệ thống chưa có AI, CMS, nhiều trang, media library hoặc publish tự động.
-- Dữ liệu project trong localStorage chỉ ở máy/trình duyệt hiện tại. Backup JSON khi cần đổi máy.
-- PR đang nằm trong **repository public**. Nội dung commit, mã nguồn và workflow artifacts trong public repo có thể công khai. Không đưa dữ liệu riêng tư/API key vào brief hoặc GitHub workflow inputs.
-- QA là structural smoke test, **không phải** kiểm thử trình duyệt thủ công, WCAG audit đầy đủ, bảo mật độc lập hay đo Lighthouse.
-- Tự động Repair chỉ nhận các trường hợp có thể dựng lại bằng renderer chuẩn; không tự động viết lại mã tùy ý bằng AI.
-- Hosting/Pages chưa được bật bởi PR này; `main` chưa được sửa. Trước khi public phải biên tập nội dung mẫu và kiểm tra link contact.
+CLI sinh website tại `website-factory/dist/` và báo cáo `quality-report.json`. Ngoài 10 QA rules cho HTML chính, builder kiểm tra liên kết giữa các trang phụ. ZIP cũng được kiểm tra giải nén độc lập bằng Python `zipfile` trên GitHub Actions.
 
-## Roadmap
-- V0.3: chỉnh sửa trực quan theo block, thêm/xóa/sắp xếp section, asset manager và export nhiều file.
-- V0.4: AI backend/local adapter, hợp đồng JSON schema, cách ly model output và review trước merge.
-- V0.5: GitHub publish có OAuth/App scope tối thiểu, PR preview và xác nhận rõ trước xuất bản.
+### Browser E2E — Playwright / Chromium
+
+Không cần Playwright khi chỉ dùng Studio. **Chỉ môi trường phát triển/CI** mới cần cài test runner. Tại thư mục `website-factory/`:
+
+```bash
+npm install --no-save --no-package-lock @playwright/test@1.64.1
+npx playwright install chromium
+npx playwright test --config playwright.config.mjs
+```
+
+Playwright tự khởi động HTTP server cục bộ ở cổng 8765. Các bài E2E kiểm tra việc khởi tạo, preview, chỉnh nội dung, chế độ mobile, thêm/sắp xếp section, lưu/mở dự án, tải và nhúng ảnh, backup/import, ZIP/HTML export, undo/redo và chống tràn ngang mobile.
+
+Workflow `.github/workflows/website-factory-ci.yml` chạy 2 jobs:
+
+- **verify**: kiểm tra cú pháp, unit tests, CLI build, ZIP interoperability, upload `website-factory-output`.
+- **browser-e2e**: sau khi verify pass, cài Chromium và chạy Playwright; lưu screenshot desktop/mobile trong artifact `website-factory-browser-preview`. Nếu lỗi, lưu trace và screenshot debug trong `website-factory-browser-failures`.
+
+Artifact được lưu 7 ngày. Chromium E2E là kiểm thử tự động thực tế, **không thay thế** review thiết kế bằng mắt, kiểm thử đa trình duyệt, kiểm tra accessibility WCAG chuyên sâu, pentest hoặc Lighthouse performance audit.
+
+## GitHub Actions và riêng tư
+
+Repository `aicodehub-vn/Ai-Code-Hub` đang **public**, PR feature giữ chế độ **Draft**, chưa merge và chưa deploy. Không nhập khóa API, brief bảo mật hoặc ảnh riêng tư vào commit, workflow input hoặc artifact.
+
+Khi workflow hiện diện trên nhánh mặc định, bạn có thể dùng `Actions > Website Factory CI > Run workflow` để chọn tên, ngành, theme, motion và danh sách trang phụ (ví dụ `about,services`). Nếu workflow còn riêng trong feature branch, nút Run workflow có thể chưa xuất hiện; chạy push/PR vẫn tự động.
+
+## Giới hạn và định hướng tiếp theo
+
+- Đây là **template-based builder**, chưa phải prompt-to-code AI. Sẽ cần backend hoặc mô hình local, schema validation, review của con người trước khi nhận output do LLM viết. Không đặt API key vào JavaScript frontend.
+- Chỉ hỗ trợ website tĩnh; chưa có CMS, database, đăng nhập người dùng, thanh toán, form backend, xuất bản/domain tự động hoặc xây dựng website tự do bằng AI.
+- Chưa có visual diff baseline hay cross-browser matrix; hiện kiểm thử Chromium trên GitHub Actions.
+- Hình trong HTML/JSON làm tệp lớn hơn; ảnh nguồn cần có quyền sử dụng. Mỗi backup giới hạn 1,8 MB.
+- V0.6 dự kiến: visual regression có baseline, đo hiệu năng và accessibility, kiểm thử đa trình duyệt; sau đó mới xem xét AI adapter an toàn.
 
 ## Mã nguồn
-- `engine.mjs`: theme renderer và schema content.
-- `layout.mjs`: chuẩn hóa thứ tự, section và hình nhúng an toàn.
-- `layout-editor.mjs`: thao tác kéo thả, điều hướng phím và asset library.
-- `styles-extra.mjs`: CSS cho FAQ, Pricing, Team và animation.
-- `site-bundle.mjs`: tạo trang HTML phụ riêng, kiểm tra liên kết.
-- `zip.mjs`: ZIP STORE/CRC32 UTF-8 không thư viện ngoài.
-- `app.mjs`, `index.html`, `studio.css`: UI, editor, project library, responsive graph.
-- `pipeline.mjs`: 7 workers, QA, repair và export gate.
-- `factory-cli.mjs`: CLI dành cho GitHub Actions.
-- `tests/`: kiểm thử regression và security.
-- `.github/workflows/website-factory-ci.yml`: CI và artifact producer.
 
-Toàn bộ V0.4 nằm trong `website-factory/` và một workflow CI; không sửa website gốc của Ai-Code-Hub.
-## Lưu ý dành cho bản V0.3
-- Ảnh nằm trực tiếp trong HTML và file backup, nên kích thước file tăng. Không dùng hình riêng tư nếu bạn định đưa HTML ra internet.
-- HTML chỉ cho phép data URL PNG/JPEG/WebP, không cho tài nguyên ngoài dạng srcset/CSS URL. Trình kiểm tra QA không thay thế kiểm toán bảo mật độc lập.
-- Kéo thả dùng HTML Drag and Drop trên desktop; điện thoại có nút ↑ ↓ để thao tác chính xác.
-- Phần UI chưa có kiểm thử E2E bằng trình duyệt thật. CI xác nhận syntax, unit/integration test và artifact generator; cần smoke test trước khi merge.
+- `engine.mjs`, `layout.mjs`, `styles-extra.mjs`: chuẩn hóa và kết xuất giao diện.
+- `layout-editor.mjs`, `app.mjs`, `history.mjs`: thao tác Studio, lịch sử chỉnh sửa, lưu và import/export.
+- `site-bundle.mjs`, `zip.mjs`, `factory-cli.mjs`: nhiều trang, đóng gói và CLI.
+- `pipeline.mjs`: QA gate, stages, deterministic repair.
+- `tests/*.test.mjs`: unit/regression; `tests/e2e/studio.spec.mjs`: Playwright real-browser smoke.
+- `playwright.config.mjs`, `.github/workflows/website-factory-ci.yml`: browser runner và CI.
 
-## V0.4 — Lưu ý về nhiều trang
-- `index.html` luôn có toàn bộ các section, nên cũng hoạt động độc lập. Chỉ chọn các trang phụ nếu muốn có trang giới thiệu, dịch vụ và liên hệ riêng. Mỗi HTML đều có CSS nội tuyến, không phụ thuộc đường dẫn CSS bên ngoài.
-- ZIP chỉ chứa HTML, không nén bằng thuật toán Deflate. Nếu có ảnh data URL, kích thước ZIP có thể đáng kể; có thể dùng static hosting thông thường để giải nén và đăng.
-- FAQ dùng mỗi dòng `Câu hỏi | Trả lời`. Pricing dùng `Tên gói | Giá / mô tả`. Team dùng `Tên | Vai trò`. Tối đa 6 mục (Pricing 3 mục), dữ liệu được escape HTML.
-- Job GitHub Actions kiểm tra zip độc lập qua Python `zipfile`, kiểm tra cú pháp JS và unit test, sau đó tạo artifact. Để Actions sinh nhiều trang từ cấu hình, gọi CLI với `--config path/to/backup.factory.json`; workflow mặc định chỉ sinh một trang theo inputs hiện có.
-- V0.4 vẫn không có LLM tự lập trình, CMS, trình duyệt E2E, hosting hay tự động publish. Không lưu khóa bí mật trong website hoặc input workflow.
+Mọi thay đổi trên nhánh feature được cách ly trong `website-factory/` và workflow CI; không sửa các website tại thư mục gốc repository.
