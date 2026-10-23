@@ -2,11 +2,31 @@
 
 Repository chứa website **Ai Code Hub** ở thư mục gốc và dự án phụ **Website Factory** trong `website-factory/`. Hai sản phẩm độc lập, không dùng chung engine hoặc cơ sở dữ liệu.
 
-## Website Factory — V0.8
+## Website Factory — Autopilot V1
 
 **Website Factory** là công cụ tạo website tĩnh bằng trình duyệt (local-first), có chỉnh nội dung, section, ảnh, motion, xuất HTML/ZIP và QA. Có mô-đun AI **tùy chọn** để đề xuất nội dung bằng JSON; AI không tự viết/chạy mã hay tự xuất bản website.
 
 **[📖 Mở README đầy đủ của Website Factory](website-factory/README.md)** · **[🧩 Xem mã nguồn Studio](website-factory/)** · **[✅ Theo dõi GitHub Actions](https://github.com/aicodehub-vn/Ai-Code-Hub/actions/workflows/website-factory-ci.yml)**
+
+### Dây chuyền tự động: Brief → Build → QA → ZIP
+
+Không cần mở Studio để tạo website. Chỉnh tệp **[`website-factory/autopilot.recipe.json`](website-factory/autopilot.recipe.json)** rồi push lên nhánh được CI theo dõi; [Website Factory Autopilot](.github/workflows/website-factory-autopilot.yml) tự chạy:
+
+1. Kiểm thử Node và kiểm tra cấu hình recipe.
+2. Chọn chế độ AI (mặc định **OFF** để không tốn tiền) → dựng trang, QA, tự phục hồi bằng template chuẩn khi cần.
+3. Kiểm tra liên kết, xuất HTML + ZIP, giải nén kiểm tra CRC.
+4. Chạy Chromium với website **vừa được tạo**, chụp ảnh desktop/mobile.
+5. Đính kèm artifact `website-factory-autopilot-site` và báo cáo QA cho mỗi lượt chạy thành công.
+
+Chạy trên máy (Node.js 22+):
+
+```powershell
+node website-factory/factory-autopilot.mjs
+```
+
+Xem kết quả trong `website-factory/autopilot-dist/`. **Tạo website và xuất gói sau trigger là tự động**. Đăng gói ra GitHub Releases chỉ khi bật `publish_release=true` trong lượt `workflow_dispatch` trên `main`; **không tự động bật GitHub Pages hoặc đưa website lên domain**. Để sử dụng AI thật phải cấu hình endpoint/model và cấp quyền gọi riêng; pipeline vẫn hoạt động hoàn chỉnh với mẫu offline.
+
+**[Xem workflow và các lần chạy](https://github.com/aicodehub-vn/Ai-Code-Hub/actions/workflows/website-factory-autopilot.yml)** · **[Hướng dẫn Autopilot đầy đủ](website-factory/README.md#autopilot--dây-chuyền-tự-động)**
 
 ### Khởi động nhanh (không dùng AI)
 
