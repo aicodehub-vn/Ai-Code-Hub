@@ -57,6 +57,8 @@ function renderList(){
  }
 }
 function saveProject(){
+ clearTimeout(inputTimer);
+ preview("Đang lưu phiên bản hiện tại");
  const config=values();
  const id=activeId||(globalThis.crypto?.randomUUID?.()||"project-"+Date.now()+"-"+Math.random().toString(36).slice(2));
  const entry={id,config,updatedAt:new Date().toISOString()};
@@ -70,7 +72,8 @@ function newProject(){
  form.elements.namedItem("name").focus();
 }
 function download(){
- if(!currentHtml)preview();
+ clearTimeout(inputTimer);
+ preview();
  if(!currentHtml)return;
  const blob=new Blob([currentHtml],{type:"text/html;charset=utf-8"});
  const url=URL.createObjectURL(blob);
@@ -79,8 +82,35 @@ function download(){
  setTimeout(()=>URL.revokeObjectURL(url),1000);
  notify("Đã xuất HTML. Hãy kiểm tra nội dung trước khi xuất bản.");
 }
+function backupJson(){
+ const config=values();
+ const payload=JSON.stringify({schemaVersion:1,config},null,2);
+ const blob=new Blob([payload],{type:"application/json;charset=utf-8"});
+ const url=URL.createObjectURL(blob);
+ const anchor=document.createElement("a");
+ anchor.href=url;anchor.download=slug(config.name)+".factory.json";
+ document.body.append(anchor);anchor.click();anchor.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ notify("Đã tải bản sao lưu cấu hình dự án (.json)");
+}
+async function importJson(event){
+ const file=event.target.files?.[0];
+ event.target.value="";
+ if(!file)return;
+ if(file.size>100000){notify("Tệp JSON vượt giới hạn 100 KB");return}
+ try{
+  const raw=JSON.parse(await file.text());
+  if(!raw||typeof raw!=="object"||Array.isArray(raw))throw new Error("Định dạng tệp không hợp lệ");
+  if(raw.schemaVersion!==1||!raw.config||typeof raw.config!=="object"||Array.isArray(raw.config))throw new Error("Không phải backup Website Factory v0.1");
+  activeId=null;
+  fill(raw.config);
+  preview("Đã nhập cấu hình, nhấn Lưu dự án để giữ lại.");
+  renderList();
+ }catch(error){notify("Không nhập được JSON: "+(error instanceof Error?error.message:"Lỗi dữ liệu"))}
+}
 async function copy(){
- if(!currentHtml)preview();
+ clearTimeout(inputTimer);
+ preview();
  if(!currentHtml)return;
  try{
   if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(currentHtml);
@@ -115,6 +145,9 @@ document.getElementById("save-project").addEventListener("click",saveProject);
 document.getElementById("new-project").addEventListener("click",newProject);
 document.getElementById("export-html").addEventListener("click",download);
 document.getElementById("copy-html").addEventListener("click",copy);
+document.getElementById("export-json").addEventListener("click",backupJson);
+document.getElementById("import-json-button").addEventListener("click",()=>document.getElementById("import-json-file").click());
+document.getElementById("import-json-file").addEventListener("change",importJson);
 projects=readStorage();
 if(projects.length){activeId=projects[0].id;fill(projects[0].config)}
 else fill({name:"Atelier Siro",brief:"Một studio thiết kế trải nghiệm số, nơi nghệ thuật và công nghệ gặp nhau.",theme:"nocturne"});
