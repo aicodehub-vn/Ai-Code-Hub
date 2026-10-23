@@ -80,10 +80,10 @@ test("ZIP writer has valid STORE headers, directory pointers and CRC32",()=>{
  assert.equal(view.getUint16(8,true),0);
  assert.equal(view.getUint32(zip.length-22,true),0x06054b50);
  assert.equal(view.getUint16(zip.length-12,true),2);
- const directory=view.getUint32(zip.length-6,true);
- const start=view.getUint32(zip.length-10,true);
- assert.equal(view.getUint32(start,true),0x02014b50);
- assert.equal(directory>0,true);
+ const directoryOffset=view.getUint32(zip.length-6,true);
+ const directorySize=view.getUint32(zip.length-10,true);
+ assert.equal(view.getUint32(directoryOffset,true),0x02014b50);
+ assert.equal(directorySize>0,true);
  assert.equal(crc32(new TextEncoder().encode("123456789")),0xcbf43926);
 });
 
