@@ -65,6 +65,25 @@ jobs:
           node --check website-factory/tests/engine.test.mjs
       - name: Run tests
         run: node --test website-factory/tests/*.test.mjs
+      - name: Verify ZIP interoperability and multiple pages
+        run: |
+          node --input-type=module <<'NODE'
+          import {writeFileSync} from "node:fs";
+          import {buildSiteFiles,verifySiteFiles} from "./website-factory/site-bundle.mjs";
+          import {createZip} from "./website-factory/zip.mjs";
+          const {files}=buildSiteFiles({name:"CI bundle",extraPages:["about","services","contact"]});
+          if(!verifySiteFiles(files).ok)throw new Error("Bundle QA failed");
+          writeFileSync("/tmp/website-factory-zip-check.zip",createZip(files));
+          NODE
+          python3 - <<'PY'
+          import zipfile
+          with zipfile.ZipFile("/tmp/website-factory-zip-check.zip") as archive:
+              assert sorted(archive.namelist()) == sorted(["index.html","about.html","services.html","contact.html"])
+              assert archive.testzip() is None
+              for name in archive.namelist():
+                  assert b"<!doctype html>" in archive.read(name).lower()
+          print("ZIP archive verified with Python zipfile")
+          PY
       - name: Produce static website artifact
         env:
           FACTORY_NAME: ${{ inputs.site_name }}
