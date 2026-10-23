@@ -1,4 +1,4 @@
-const EXTRA_STYLE=String.raw\`
+const EXTRA_STYLE=String.raw`
 .extra-faq{background:var(--card)}
 .faq-items{max-width:920px;margin-top:35px;border-top:1px solid var(--line)}
 .faq-items details{border-bottom:1px solid var(--line);padding:18px 0}
@@ -21,5 +21,5 @@ const EXTRA_STYLE=String.raw\`
 @keyframes enter-expressive{from{opacity:0;transform:translateY(28px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:760px){.pricing-grid,.team-grid{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
-\`;
+`;
 export {EXTRA_STYLE};
