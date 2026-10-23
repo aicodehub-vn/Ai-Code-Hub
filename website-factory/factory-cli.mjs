@@ -26,7 +26,7 @@ async function loadConfig(){
  if(!process.argv[index+1])throw new Error("Missing file argument after --config");
  const path=resolve(process.argv[index+1]);
  const file=await readFile(path,"utf8");
- if(file.length>100000)throw new Error("Configuration exceeds 100 KB");
+ if(file.length>1800000)throw new Error("Configuration exceeds 1.8 MB");
  const data=JSON.parse(file);
  if(!data||typeof data!=="object"||Array.isArray(data))throw new Error("Config must be an object");
  if(data.schemaVersion===1){
