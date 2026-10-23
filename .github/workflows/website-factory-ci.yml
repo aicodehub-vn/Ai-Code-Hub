@@ -31,6 +31,17 @@ on:
         default: "nocturne"
         type: choice
         options: [nocturne, paper, signal, forest]
+      motion:
+        description: "Animation"
+        required: false
+        type: choice
+        default: subtle
+        options: [off, subtle, expressive]
+      pages:
+        description: "Trang phụ, ngăn cách bằng dấu phẩy: about,services,contact"
+        required: false
+        type: string
+        default: ""
       brief:
         description: "Nội dung mô tả (không nhập dữ liệu bí mật)"
         required: false
@@ -90,6 +101,8 @@ jobs:
           FACTORY_CATEGORY: ${{ inputs.category }}
           FACTORY_THEME: ${{ inputs.theme }}
           FACTORY_BRIEF: ${{ inputs.brief }}
+          FACTORY_MOTION: ${{ inputs.motion }}
+          FACTORY_PAGES: ${{ inputs.pages }}
         run: node website-factory/factory-cli.mjs
       - name: Upload generated website and quality report
         uses: actions/upload-artifact@v4
