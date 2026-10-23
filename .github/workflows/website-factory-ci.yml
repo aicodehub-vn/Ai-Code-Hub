@@ -111,3 +111,33 @@ jobs:
           path: website-factory/dist/
           if-no-files-found: error
           retention-days: 7
+
+  browser-e2e:
+    name: Chromium browser smoke / UI regression
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install browser test runner (test-only)
+        working-directory: website-factory
+        run: npm install --no-save --no-package-lock --ignore-scripts @playwright/test@1.64.1
+      - name: Install Chromium and system dependencies
+        working-directory: website-factory
+        run: npx playwright install --with-deps chromium
+      - name: Browser E2E (real Chromium against local HTTP server)
+        working-directory: website-factory
+        run: npx playwright test --config playwright.config.mjs
+      - name: Upload failed browser traces and screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-factory-browser-failures
+          path: |
+            website-factory/playwright-results/
+            website-factory/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
