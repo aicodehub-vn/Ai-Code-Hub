@@ -13,10 +13,10 @@
   <aside class="sidebar">
     <div class="logo"><span class="glyph">✳</span><span>WEBSITE<br><b>FACTORY</b></span></div>
     <p class="side-label">WORKSPACE / 01</p>
-    <div class="side-nav"><div class="active-nav">◈ <span>Studio Builder</span><small>ACTIVE</small></div><div>▧ <span>Design Library</span></div><div>◇ <span>Pipeline Stations</span><small>V0.4</small></div></div>
+    <div class="side-nav"><div class="active-nav">◈ <span>Studio Builder</span><small>ACTIVE</small></div><div>▧ <span>Design Library</span></div><div>◇ <span>Pipeline Stations</span><small>V0.5</small></div></div>
     <div class="history-title"><span>PROJECT LIBRARY</span><button type="button" id="new-project" title="Tạo dự án mới" aria-label="Tạo dự án mới">＋</button></div>
     <div id="project-list" class="project-list"><p class="empty">Chưa có dự án được lưu.</p></div>
-    <div class="sidebar-bottom"><i></i><span>LOCAL-FIRST ENGINE<small>v0.4 / NO TELEMETRY</small></span></div>
+    <div class="sidebar-bottom"><i></i><span>LOCAL-FIRST ENGINE<small>v0.5 / NO TELEMETRY</small></span></div>
   </aside>
   <div class="main">
     <header class="topbar"><div>WORKSPACE <span>/</span> STUDIO BUILDER <span>/</span> <b>EDITOR</b></div><div class="top-right"><span>● NO API KEY REQUIRED</span><strong>WF</strong></div></header>
@@ -91,7 +91,7 @@
             <div class="asset-actions"><button id="image-upload-button" type="button">＋ Thêm ảnh từ máy</button><input id="image-upload" type="file" accept="image/png,image/jpeg,image/webp" hidden><small id="asset-counter">0/5 IMAGES</small></div>
             <p class="asset-note">Ảnh nhúng làm HTML lớn hơn; mỗi ảnh gốc tối đa 2 MB, thư viện tối đa 5 ảnh. Hãy sử dụng ảnh bạn có quyền khai thác.</p>
           </details>
-          <div class="notice"><span>✦</span><p><b>Generation Engine v0.4</b><br>Hệ thống tạo website theo mẫu cấu hình. Chưa tích hợp LLM, không gửi brief lên máy chủ.</p></div>
+          <div class="notice"><span>✦</span><p><b>Generation Engine v0.5</b><br>Hệ thống tạo website theo mẫu cấu hình. Chưa tích hợp LLM, không gửi brief lên máy chủ.</p></div>
         </section>
         <section class="panel preview-panel" aria-labelledby="preview-title">
           <div class="panel-head"><div><span class="number">02</span><h2 id="preview-title">Live Preview</h2></div><span class="tag ready">● PREVIEW READY</span></div>
@@ -102,6 +102,11 @@
             </div>
           </div>
           <div id="preview-stage" class="preview-stage"><iframe title="Bản xem trước website đã tạo" id="preview-frame" sandbox="" loading="eager"></iframe></div>
+          <div class="edit-history" role="group" aria-label="Lịch sử chỉnh sửa">
+            <span>HISTORY / CURRENT SESSION</span>
+            <button id="undo-edit" type="button" disabled title="Hoàn tác lần chỉnh sửa gần nhất">↶ Hoàn tác</button>
+            <button id="redo-edit" type="button" disabled title="Làm lại thao tác đã hoàn tác">↷ Làm lại</button>
+          </div>
           <div class="preview-bottom"><span class="preview-status"><i></i><span id="status" role="status" aria-live="polite">Đã tạo trang mẫu</span></span><span>RESPONSIVE · STATIC HTML</span></div>
           <div class="actions">
             <button id="export-html" type="button" class="export">↓ Xuất HTML</button>
