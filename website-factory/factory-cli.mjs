@@ -57,8 +57,11 @@ try{
   console.error("Website QA blocked export",result.report.errors);
   process.exitCode=1;
  }else{
-  await writeFile(join(dist,"index.html"),result.html,"utf8");
-  console.log("Website produced:",join(dist,"index.html"));
+  const bundle=buildSiteFiles(result.config);
+  const audit=verifySiteFiles(bundle.files);
+  if(!audit.ok)throw new Error("Multi-page QA blocked: "+JSON.stringify(audit.issues));
+  for(const [filename,markup] of Object.entries(bundle.files))await writeFile(join(dist,filename),markup,"utf8");
+  console.log("Website pages produced:",Object.keys(bundle.files).join(", "));
   console.log("Quality checks:",result.report.checks.filter(c=>c.pass).length+"/"+result.report.checks.length);
   console.log("Warnings:",result.warnings.length);
  }
