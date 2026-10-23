@@ -1,0 +1,37 @@
+name: Website Factory CI
+
+on:
+  push:
+    branches:
+      - main
+      - feat/website-factory-**
+    paths:
+      - "website-factory/**"
+      - ".github/workflows/website-factory-ci.yml"
+  pull_request:
+    paths:
+      - "website-factory/**"
+      - ".github/workflows/website-factory-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Check source and run tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check JavaScript syntax
+        run: |
+          node --check website-factory/engine.mjs
+          node --check website-factory/app.mjs
+          node --check website-factory/tests/engine.test.mjs
+      - name: Run tests
+        run: node --test website-factory/tests/*.test.mjs
