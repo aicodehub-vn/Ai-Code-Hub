@@ -17,7 +17,8 @@ test("WCAG A/AA accessibility scan: Studio and generated website",async({page,br
  await page.locator("#preview-frame").evaluate(element=>element.remove());
  const studio=await new AxeBuilder({page}).withTags(["wcag2a","wcag2aa","wcag21a","wcag21aa"]).analyze();
  expect(html).toMatch(/<!doctype html>/);
- const exported=await browser.newPage();
+ const exportContext=await browser.newContext();
+ const exported=await exportContext.newPage();
  await exported.setContent(html,{waitUntil:"load"});
  const site=await new AxeBuilder({page:exported}).withTags(["wcag2a","wcag2aa","wcag21a","wcag21aa"]).analyze();
  await save("accessibility.json",{
@@ -26,7 +27,7 @@ test("WCAG A/AA accessibility scan: Studio and generated website",async({page,br
    {name:"Exported HTML",violations:site.violations.map(v=>({id:v.id,impact:v.impact,help:v.help,nodes:v.nodes.length}))}
   ]
  });
- await exported.close();
+ await exportContext.close();
  const serious=[...studio.violations,...site.violations].filter(v=>v.impact==="critical"||v.impact==="serious");
  console.log("[ACCESSIBILITY] Studio violations: "+studio.violations.length+", exported violations: "+site.violations.length);
  for(const violation of serious)console.error("[A11Y] "+violation.impact+" "+violation.id+" "+violation.help+" nodes="+violation.nodes.length);
