@@ -11,8 +11,11 @@ async function save(name,data){
 test("WCAG A/AA accessibility scan: Studio and generated website",async({page,browser})=>{
  await page.goto("./");
  await expect(page.locator("#qa-score")).toContainText("PASS");
- const studio=await new AxeBuilder({page}).withTags(["wcag2a","wcag2aa","wcag21a","wcag21aa"]).analyze();
+ // The preview uses sandbox="" (opaque origin). Audit Studio without that
+ // isolated frame, and audit the exported markup in a separate page below.
  const html=await page.locator("#preview-frame").getAttribute("srcdoc");
+ await page.locator("#preview-frame").evaluate(element=>element.remove());
+ const studio=await new AxeBuilder({page}).withTags(["wcag2a","wcag2aa","wcag21a","wcag21aa"]).analyze();
  expect(html).toMatch(/<!doctype html>/);
  const exported=await browser.newPage();
  await exported.setContent(html,{waitUntil:"load"});
