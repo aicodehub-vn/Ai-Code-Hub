@@ -13,6 +13,13 @@ function validateHtml(html){
  const text=typeof html==="string"?html:"";
  const targetIds=new Set([...text.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
  const fragmentLinks=[...text.matchAll(/\bhref="#([^"]+)"/g)].map(m=>m[1]);
+ const imageTags=[...text.matchAll(/<img\b[^>]*>/gi)].map(m=>m[0]);
+ const imageSourcesOk=imageTags.every(tag=>{
+  const match=/\bsrc="(data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})"/i.exec(tag);
+  return Boolean(match)&&match[1].length<=320000;
+ });
+ const forbiddenElements=/<(?:script|iframe|link|object|embed|video|audio|source)\b|\bon[a-z]+\s*=|@import\s|url\(\s*['"]?https?:/i.test(text);
+
  const rules=[
   ["doctype",/^\s*<!doctype html>/i.test(text),"Tài liệu có DOCTYPE HTML5"],
   ["lang",/<html\s+lang="vi">/i.test(text),"Ngôn ngữ tài liệu được khai báo"],
@@ -21,7 +28,7 @@ function validateHtml(html){
   ["headings",(text.match(/<h1\b/gi)||[]).length===1,"Có đúng một H1"],
   ["landmarks",targetIds.has("main")&&targetIds.has("services")&&targetIds.has("about")&&targetIds.has("contact"),"Có các section bắt buộc"],
   ["anchorLinks",fragmentLinks.length>0&&fragmentLinks.every(id=>targetIds.has(id)),"Các liên kết nội bộ có đích"],
-  ["standalone",/<style>[\s\S]*<\/style>/.test(text)&&!/<script\b|<link\b[^>]*rel="stylesheet"|<(?:img|iframe|source)\b[^>]*\bsrc\s*=|@import\s|url\(\s*[\x27"]?https?:/i.test(text),"Mã độc lập, không tải JS/CSS/CDN bên ngoài"],
+  ["standalone",/<style>[\s\S]*<\/style>/.test(text)&&imageSourcesOk&&!forbiddenElements,"Mã độc lập, chỉ cho phép ảnh nhúng đã kiểm tra"],
   ["responsive",/@media\s*\(\s*max-width/i.test(text)&&/prefers-reduced-motion/i.test(text),"Có responsive và reduced motion"],
   ["safeStyle",(text.match(/<style>/gi)||[]).length===1&&(text.match(/<\/style>/gi)||[]).length===1,"Một style block duy nhất"]
  ];
