@@ -24,7 +24,9 @@ function normalize(raw={}){
   const assets=normalizeAssets(raw.assets);
   const requestedHero=typeof raw.heroAssetId==="string"?raw.heroAssetId:"";
   const motion=["off","subtle","expressive"].includes(raw.motion)?raw.motion:"subtle";
-  return {motion,assets,layoutSpec:normalizeLayout(raw.layoutSpec),
+  const validPages=["about","services","contact"];
+  const extraPages=Array.isArray(raw.extraPages)?validPages.filter(id=>raw.extraPages.includes(id)):[];
+  return {extraPages,motion,assets,layoutSpec:normalizeLayout(raw.layoutSpec),
     heroAssetId:assets.some(item=>item.id===requestedHero)?requestedHero:"",
     category,theme,name,headline:clean(raw.headline,130)||preset.headline,
     brief,layout:raw.layout==="centered"?"centered":"split",
