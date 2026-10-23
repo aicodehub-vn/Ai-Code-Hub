@@ -132,6 +132,14 @@ jobs:
       - name: Browser E2E (real Chromium against local HTTP server)
         working-directory: website-factory
         run: npx playwright test --config playwright.config.mjs
+      - name: Upload desktop and mobile review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-factory-browser-preview
+          path: website-factory/playwright-snapshots/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload failed browser traces and screenshots
         if: failure()
         uses: actions/upload-artifact@v4
