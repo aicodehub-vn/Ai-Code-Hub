@@ -57,6 +57,8 @@ test("source UI uses a sandboxed preview and module app", ()=>{
   assert.match(html,/type="module" src="\.\/app\.mjs"/);
   assert.match(html,/id="export-html"/);
   assert.match(html,/id="save-project"/);
+  assert.match(html,/id="export-json"/);
+  assert.match(html,/id="import-json-file"/);
 });
 
 test("contact link uses validated mailto only", ()=>{
