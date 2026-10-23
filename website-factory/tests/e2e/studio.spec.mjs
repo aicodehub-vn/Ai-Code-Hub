@@ -128,6 +128,20 @@ test("Undo and redo restore entire site state without losing export eligibility"
   await expect(page.locator("#qa-score")).toContainText("PASS");
 });
 
+test("Desktop/mobile screenshots are captured without horizontal page overflow",async({page})=>{
+  await page.setViewportSize({width:1366,height:850});
+  await ready(page);
+  await page.screenshot({path:"playwright-snapshots/studio-desktop.png",fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  await page.locator('[data-device="mobile"]').click();
+  await expect(page.locator("#preview-stage")).toHaveClass(/mobile/);
+  const bounds=await page.evaluate(()=>({
+    viewport:window.innerWidth,content:document.documentElement.scrollWidth
+  }));
+  expect(bounds.content).toBeLessThanOrEqual(bounds.viewport+1);
+  await page.screenshot({path:"playwright-snapshots/studio-mobile.png",fullPage:true});
+});
+
 test("Project JSON import rejects malformed input without changing active design",async({page})=>{
   await ready(page);
   const before=await page.locator("#name").inputValue();
