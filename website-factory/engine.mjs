@@ -1,3 +1,4 @@
+import {EXTRA_STYLE} from "./styles-extra.mjs";
 import {normalizeAssets,normalizeLayout,heroArtwork,assembleSections} from "./layout.mjs";
 
 const PRESETS={
@@ -84,7 +85,7 @@ function renderSite(input={}){
  <section class="contact" id="contact"><div class="wrap contact-inner"><div><div class="label">03 — LET'S CONNECT</div><h2>${esc(c.content.contactTitle)}</h2><p>${esc(c.content.contactText)}</p></div><div><a class="contact-link" href="${contact}">${c.email?"Gửi email":"Liên hệ"} <span>↗</span></a><p class="contact-hint">${c.email?esc(c.email):"Chưa cấu hình email. Hãy bổ sung địa chỉ liên hệ trong Website Factory."}</p></div></div></section>
  </main><footer><div class="wrap footer-inner"><span>© ${new Date().getFullYear()} ${esc(c.name)}</span><span>Made with Website Factory</span><a href="#top">Lên đầu trang ↑</a></div></footer>`;
  const assembled=assembleSections(body,c.layoutSpec,c.assets);
- return `<!doctype html>\n<html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="${esc(c.brief.slice(0,160))}"><meta name="theme-color" content="${t.bg}"><title>${esc(c.name)} — ${esc(c.headline)}</title><style>${styles}</style></head><body class="motion-${c.motion}">${assembled}</body></html>`;
+ return `<!doctype html>\n<html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="${esc(c.brief.slice(0,160))}"><meta name="theme-color" content="${t.bg}"><title>${esc(c.name)} — ${esc(c.headline)}</title><style>${styles}${EXTRA_STYLE}</style></head><body class="motion-${c.motion}">${assembled}</body></html>`;
 }
 
 export {PRESETS,THEMES,EDIT_FIELDS,contentDefaults,normalizedContent,normalize,renderSite,slug};
