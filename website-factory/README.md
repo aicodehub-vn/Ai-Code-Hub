@@ -1,6 +1,58 @@
-# Website Factory — V0.8
+# Website Factory — Autopilot V1 (V0.8 Studio retained)
 
 Nhà máy tạo website tĩnh **local-first** chạy trong trình duyệt. Phần sinh website không cần API, đăng nhập, CDN hay backend. **AI là mô-đun tùy chọn** qua Node local-only bridge, không phải điều kiện để sử dụng website builder. Các trạm "Agent Workspace" vẫn là **workers theo quy tắc**; AI chỉ có quyền đề xuất văn bản có cấu trúc và không tự thay đổi mã nguồn.
+
+## Autopilot — dây chuyền tự động
+
+**Đã có mã cho quy trình không giám sát sau một lần kích hoạt:**
+
+`autopilot.recipe.json` → Validation → AI tùy chọn → Content/Design → HTML Generator → 10 QA checks → Repair chuẩn → Multi-page link audit → ZIP → Independent Python ZIP verification → Chromium smoke → Artifact → *GitHub Release (opt-in)*.
+
+### Cách 1: Tự chạy khi sửa brief trên GitHub
+
+1. Mở [`autopilot.recipe.json`](autopilot.recipe.json), cập nhật `project.name`, `project.brief`, `category`, `theme`, `layout`, `motion` và `extraPages` rồi commit/push.
+2. GitHub Actions workflow [`Website Factory Autopilot`](../.github/workflows/website-factory-autopilot.yml) tự chạy trên `main` và nhánh `feat/website-factory-*` khi recipe hoặc file Autopilot được thay đổi. Từ nhánh khác, chạy workflow thủ công khi đã xuất hiện trên `main`.
+3. Mở workflow đã chạy; nếu cả `build` và `browser-smoke` PASS, tải artifact `website-factory-autopilot-site`. Artifact gồm các trang HTML, `site.zip` và `quality-report.json` (giữ 14 ngày). `website-factory-autopilot-review` chứa screenshot trang vừa tạo.
+
+**Chú ý:** Bản demo recipe mặc định tự xây một site 4 trang bằng template **offline**, không sử dụng AI và không phát sinh chi phí gọi mô hình. Chỉ các thay đổi nằm trên nhánh hợp lệ hoặc lần kích hoạt hợp lệ mới tạo job; không có tác vụ agent chạy liên tục.
+
+### Cách 2: Chạy một lệnh trên Windows
+
+Yêu cầu Node.js 22+ và repository đã clone. Trong thư mục gốc:
+
+```powershell
+node website-factory/factory-autopilot.mjs --config website-factory/autopilot.recipe.json
+```
+
+Output nằm trong `website-factory/autopilot-dist/` (đã được gitignore). Không cần npm install cho công đoạn tạo website. Các bước sau trigger tự chạy, bao gồm xây nhiều trang, QA và ZIP.
+
+### Cách 3: AI tự viết nội dung rồi xây site
+
+Muốn AI hoạt động tự động **trong một lần chạy đã cấp quyền**, đặt repository **Variables** `FACTORY_AI_API_URL` (địa chỉ HTTPS `/v1/chat/completions`) và `FACTORY_AI_MODEL`; đặt repository **Secret** `FACTORY_AI_API_KEY`, sau đó khi workflow có mặt trên `main`, vào `Actions > Website Factory Autopilot > Run workflow` và chọn:
+
+- `ai_mode=optional`: gọi model nếu đã bật/cấu hình; nếu model lỗi, JSON sai schema hoặc có tuyên bố đáng nghi, tự fallback sang template và ghi rõ `ai.fallback` trong báo cáo.
+- `ai_mode=required`: bắt buộc gọi model và kiểm tra JSON; model không kết nối/không đạt → FAIL, **không xuất bản kết quả sai**.
+- `enable_remote_ai=true`: cấp quyền cho đúng lượt chạy này được gọi provider (có thể tính phí). Nếu `false`, provider bị vô hiệu hóa. Các lượt `push` và `pull_request` **luôn chạy offline**, không tự động tiêu thụ API key.
+- `publish_release=false` (mặc định): chỉ tạo artifact. `true` trên `main` sẽ **tự phát hành ZIP và báo cáo dưới dạng GitHub Release công khai**, sau khi Chromium smoke PASS. Không thể publish từ PR/feature branch và không dùng thay thế hosting.
+
+Model phải hỗ trợ API OpenAI-compatible chat-completions và phản hồi đúng JSON. **Chưa xác nhận hoạt động với model thực**; CI chỉ thử model giả lập. Không nhập API key hay nội dung bí mật trực tiếp vào recipe công khai. Trình tạo website chỉ chấp nhận nội dung có schema, không chạy JS/HTML do AI viết. Bộ kiểm tra tuyên bố đáng nghi là heuristic hạn chế, **không thay thế người biên tập/fact-checking**.
+
+### Các trạng thái trong `quality-report.json`
+
+Report ghi `passed`, `pages`, `checks`, `stages`, `warnings`, `ai.mode`, `ai.applied`, `ai.fallback`. Chế độ offline sẽ ghi AI `skipped`; khi AI optional gặp lỗi sẽ có `fallback`. `required` mà AI lỗi sẽ trả exit code khác 0, job thất bại và không phát hành.
+
+### Phạm vi tự động hóa
+
+| Công đoạn | Tự động sau trigger? |
+|---|---|
+| Đọc recipe, dựng site, QA, phục hồi theo mẫu, kiểm tra link, ZIP | Có |
+| Test thật trên Chromium desktop/mobile, upload artifact | Có khi chạy GitHub Actions |
+| Gọi AI để viết nội dung | Có, **chỉ khi cho phép và cung cấp model** |
+| Công bố ZIP lên public GitHub Releases | Có, **chỉ khi bật `publish_release` trên main** |
+| Triển khai website lên GitHub Pages/domain/hosting | **Chưa**, cần cấu hình đích, để tránh ghi đè Ai Code Hub hiện hữu |
+| AI tùy ý tự viết mã HTML/CSS/JS hoặc quản lý domain | **Chưa**, chưa có sandbox/production deploy |
+
+GitHub Release là gói tải xuống, **không phải website trực tuyến**. Đây là mức tự động hóa đầu-cuối đối với **tạo, kiểm tra và đóng gói website**, không phải lời cam kết mọi bước xuất bản trên bất kỳ hosting nào đều được tự động hoàn toàn.
 
 ## Trải nghiệm hiện có
 
