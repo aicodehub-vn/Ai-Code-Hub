@@ -40,26 +40,27 @@ async function loadConfig(){
 try{
  const config=await loadConfig();
  const result=runPipeline(config);
+ const bundle=result.ok?buildSiteFiles(result.config):null;
+ const audit=bundle?verifySiteFiles(bundle.files):{ok:false,issues:[]};
+ const passed=result.ok&&audit.ok;
  const report={
   schemaVersion:1,
   website:result.config.name,
   generatedAt:new Date().toISOString(),
-  passed:result.ok,
+  passed,
   repaired:result.repaired,
   checks:result.report.checks,
-  issues:result.report.errors,
+  issues:[...result.report.errors,...audit.issues],
+  pages:bundle?Object.keys(bundle.files):[],
   warnings:result.warnings,
   stages:result.stages
  };
  await mkdir(dist,{recursive:true});
  await writeFile(join(dist,"quality-report.json"),JSON.stringify(report,null,2)+"\n","utf8");
- if(!result.ok){
+ if(!passed){
   console.error("Website QA blocked export",result.report.errors);
   process.exitCode=1;
  }else{
-  const bundle=buildSiteFiles(result.config);
-  const audit=verifySiteFiles(bundle.files);
-  if(!audit.ok)throw new Error("Multi-page QA blocked: "+JSON.stringify(audit.issues));
   for(const [filename,markup] of Object.entries(bundle.files))await writeFile(join(dist,filename),markup,"utf8");
   console.log("Website pages produced:",Object.keys(bundle.files).join(", "));
   console.log("Quality checks:",result.report.checks.filter(c=>c.pass).length+"/"+result.report.checks.length);
