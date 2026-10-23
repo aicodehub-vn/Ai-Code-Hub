@@ -1,4 +1,5 @@
 import {test,expect} from "@playwright/test";
+import {createFactoryServer} from "../../ai-server.mjs";
 const proposal={
  headline:"Thiết kế dành cho tương lai",theme:"forest",layout:"centered",
  content:{
@@ -68,6 +69,30 @@ test("model output with dangerous fields is rejected without changing the site",
  await expect(page.locator("#ai-review")).toBeHidden();
  await expect(page.locator("#headline")).toHaveValue(old);
  await expect(page.locator("#qa-score")).toContainText("PASS");
+});
+test("full browser-to-local-AI-bridge roundtrip requires explicit consent",async({page})=>{
+ let sent=null,calls=0;
+ const server=createFactoryServer({
+  config:{enabled:true,url:"http://127.0.0.1:1234/v1/chat/completions",model:"test",key:""},
+  requestProvider:async input=>{sent=input;calls++;return proposal}
+ });
+ await new Promise((resolve,reject)=>{server.once("error",reject);server.listen(0,"127.0.0.1",resolve)});
+ try{
+  const url="http://127.0.0.1:"+server.address().port+"/website-factory/";
+  await page.goto(url);
+  await expect(page.locator("#qa-score")).toContainText("PASS");
+  await page.locator("#ai-workspace").evaluate(el=>el.open=true);
+  await expect(page.locator("#ai-state")).toContainText("Đã kết nối");
+  expect(calls).toBe(0);
+  await page.locator("#ai-consent").check();
+  await page.locator("#ai-request").click();
+  await expect(page.locator("#ai-review")).toBeVisible();
+  expect(calls).toBe(1);
+  expect(Object.keys(sent)).toEqual(["name","category","headline","brief","theme","layout"]);
+  await page.locator("#ai-apply").click();
+  await expect(page.locator("#headline")).toHaveValue(proposal.headline);
+  await expect(page.locator("#qa-score")).toContainText("PASS");
+ }finally{await new Promise(resolve=>server.close(resolve))}
 });
 function assertRequiredKeys(data){
  expect(Object.keys(data)).toEqual(["brief"]);
