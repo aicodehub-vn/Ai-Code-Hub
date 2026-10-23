@@ -12,7 +12,13 @@ function pageContent(c,id){
 function buildSiteFiles(raw){
  const c=normalize(raw),base=renderSite(c),style=base.match(/<style>([\s\S]*?)<\/style>/)?.[1];
  if(!style)throw new Error("Cannot extract base styles");
- const files={"index.html":base};
+ let index=base;
+ index=index.replace(/(<nav aria-label="Điều hướng chính">)([\s\S]*?)(<\/nav>)/,(_,open,links,close)=>{
+  let updated=links;
+  for(const id of c.extraPages)updated=updated.replace('href="#'+id+'"','href="'+id+'.html"');
+  return open+updated+close;
+ });
+ const files={"index.html":index};
  for(const id of c.extraPages){
   if(!PAGES.includes(id))continue;
   const title=pageTitle(c,id);
