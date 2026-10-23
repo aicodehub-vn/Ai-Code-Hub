@@ -21,6 +21,8 @@ const SYSTEM_PROMPT=[
 function configFromEnv(env=process.env){
  const enabled=env.FACTORY_AI_ENABLED==="1";
  const maxRequests=Number(env.FACTORY_AI_MAX_REQUESTS??6);
+ const jsonMode=env.FACTORY_AI_JSON_MODE!=="0";
+ if(env.FACTORY_AI_JSON_MODE!==undefined&&!["0","1"].includes(env.FACTORY_AI_JSON_MODE))throw new Error("FACTORY_AI_JSON_MODE must be 0 or 1");
  if(!Number.isInteger(maxRequests)||maxRequests<1||maxRequests>60)throw new Error("FACTORY_AI_MAX_REQUESTS must be 1–60");
  const model=String(env.FACTORY_AI_MODEL||"").trim(),url=String(env.FACTORY_AI_API_URL||"").trim();
  let endpoint=null;
@@ -34,7 +36,7 @@ function configFromEnv(env=process.env){
    throw new Error("FACTORY_AI_API_KEY is required for remote HTTPS providers");
  }
  if(enabled&&(!url||!model))throw new Error("FACTORY_AI_API_URL and FACTORY_AI_MODEL required");
- return {enabled,url:endpoint?.href||"",model,key:env.FACTORY_AI_API_KEY||"",maxRequests};
+ return {enabled,url:endpoint?.href||"",model,key:env.FACTORY_AI_API_KEY||"",maxRequests,jsonMode};
 }
 function reply(res,code,payload,extraHeaders={}){
  res.writeHead(code,{"content-type":"application/json; charset=utf-8","cache-control":"no-store","x-content-type-options":"nosniff",...extraHeaders});
@@ -83,7 +85,7 @@ async function askProvider(input,cfg,fetchImpl=fetch){
    method:"POST",redirect:"error",signal:controller.signal,
    headers:{"content-type":"application/json",...(cfg.key?{authorization:"Bearer "+cfg.key}:{})},
    body:JSON.stringify({model:cfg.model,temperature:0.5,max_tokens:1600,
-    response_format:{type:"json_object"},
+    ...(cfg.jsonMode===false?{}:{response_format:{type:"json_object"}}),
     messages:[{role:"system",content:SYSTEM_PROMPT},{role:"user",content:JSON.stringify(input)}]})
   });
   if(!response.ok)throw new Error("Model request failed: "+response.status);
