@@ -80,6 +80,8 @@ test("QA rejects injected remote image, script tags and event attributes",()=>{
  for(const injection of [
   '<img src="https://example.com/x.jpg">',
   '<img src="javascript:alert(1)">',
+  '<img src="data:image/png;base64,aaaa" srcset="https://evil.example/img.png 2x">',
+  '<svg onload="alert(1)"></svg>',
   '<img src="data:image/svg+xml;base64,PHN2Zz4=">',
   '<img src="data:image/png;base64,abc" onerror="alert(1)">',
   '<script>alert(1)</script>'
