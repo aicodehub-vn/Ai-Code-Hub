@@ -5,6 +5,7 @@ import {readFile} from "node:fs/promises";
 import {join,dirname,resolve} from "node:path";
 import {fileURLToPath} from "node:url";
 import {validateProposal,safeBrief,parseModelJSON} from "./ai-contract.mjs";
+import {createRequestGate} from "./ai-policy.mjs";
 const ROOT=dirname(fileURLToPath(import.meta.url));
 const ALLOWED_FILES=new Set(["index.html","studio.css","app.mjs","engine.mjs","layout.mjs","layout-editor.mjs","pipeline.mjs","site-bundle.mjs","zip.mjs","history.mjs","styles-extra.mjs","ai-ui.mjs","ai-contract.mjs"]);
 const TYPES={".html":"text/html; charset=utf-8",".mjs":"text/javascript; charset=utf-8",".css":"text/css; charset=utf-8"};
@@ -19,6 +20,8 @@ const SYSTEM_PROMPT=[
 ].join("\n");
 function configFromEnv(env=process.env){
  const enabled=env.FACTORY_AI_ENABLED==="1";
+ const maxRequests=Number(env.FACTORY_AI_MAX_REQUESTS??6);
+ if(!Number.isInteger(maxRequests)||maxRequests<1||maxRequests>60)throw new Error("FACTORY_AI_MAX_REQUESTS must be 1–60");
  const model=String(env.FACTORY_AI_MODEL||"").trim(),url=String(env.FACTORY_AI_API_URL||"").trim();
  let endpoint=null;
  if(url){
@@ -31,10 +34,10 @@ function configFromEnv(env=process.env){
    throw new Error("FACTORY_AI_API_KEY is required for remote HTTPS providers");
  }
  if(enabled&&(!url||!model))throw new Error("FACTORY_AI_API_URL and FACTORY_AI_MODEL required");
- return {enabled,url:endpoint?.href||"",model,key:env.FACTORY_AI_API_KEY||""};
+ return {enabled,url:endpoint?.href||"",model,key:env.FACTORY_AI_API_KEY||"",maxRequests};
 }
-function reply(res,code,payload){
- res.writeHead(code,{"content-type":"application/json; charset=utf-8","cache-control":"no-store","x-content-type-options":"nosniff"});
+function reply(res,code,payload,extraHeaders={}){
+ res.writeHead(code,{"content-type":"application/json; charset=utf-8","cache-control":"no-store","x-content-type-options":"nosniff",...extraHeaders});
  res.end(JSON.stringify(payload));
 }
 async function readBody(req){
@@ -50,6 +53,29 @@ async function readBody(req){
  if(!data.brief||typeof data.brief!=="object"||Array.isArray(data.brief))throw new Error("Brief missing");
  return safeBrief(data.brief);
 }
+async function readLimitedProviderBody(response,limit=20000){
+ const length=Number(response.headers?.get?.("content-length")||0);
+ if(length>limit)throw new Error("Provider response exceeds limit");
+ if(!response.body?.getReader){
+  const body=await response.text();
+  if(Buffer.byteLength(body,"utf8")>limit)throw new Error("Provider response exceeds limit");
+  return body;
+ }
+ const reader=response.body.getReader(),chunks=[];
+ let size=0;
+ try{
+  while(true){
+   const {done,value}=await reader.read();
+   if(done)break;
+   size+=value.byteLength;
+   if(size>limit)throw new Error("Provider response exceeds limit");
+   chunks.push(value);
+  }
+  const merged=new Uint8Array(size);let at=0;
+  for(const bytes of chunks){merged.set(bytes,at);at+=bytes.byteLength}
+  return new TextDecoder("utf-8",{fatal:true}).decode(merged);
+ }catch(error){await reader.cancel().catch(()=>{});throw error}
+}
 async function askProvider(input,cfg,fetchImpl=fetch){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),25000);
  try{
@@ -61,14 +87,14 @@ async function askProvider(input,cfg,fetchImpl=fetch){
     messages:[{role:"system",content:SYSTEM_PROMPT},{role:"user",content:JSON.stringify(input)}]})
   });
   if(!response.ok)throw new Error("Model request failed: "+response.status);
-  const text=await response.text();
-  if(Buffer.byteLength(text,"utf8")>20000)throw new Error("Provider response exceeds 20 KB");
+  const text=await readLimitedProviderBody(response);
   const json=JSON.parse(text);
   return validateProposal(parseModelJSON(json?.choices?.[0]?.message?.content));
  }finally{clearTimeout(timer)}
 }
 function createFactoryServer(options={}){
  const cfg=options.config||configFromEnv(),requestProvider=options.requestProvider||askProvider;
+ const gate=options.gate||createRequestGate({maxRequests:cfg.maxRequests||6});
  return createServer(async(req,res)=>{
   try{
    const host=String(req.headers.host||"");
@@ -85,8 +111,15 @@ function createFactoryServer(options={}){
      reply(res,403,{error:"Origin rejected"});return;
     }
     const input=await readBody(req);
+    const permit=gate.enter();
+    if(!permit.ok){
+     reply(res,429,{error:permit.reason==="busy"?"AI is processing another request.":"AI request quota reached.",
+      retryAfterSeconds:permit.retryAfter},{"retry-after":String(permit.retryAfter)});
+     return;
+    }
     try{reply(res,200,{proposal:validateProposal(await requestProvider(input,cfg))})}
     catch{reply(res,502,{error:"Model failed or returned invalid structured content."})}
+    finally{permit.release()}
     return;
    }
    if(req.method!=="GET"&&req.method!=="HEAD"){reply(res,405,{error:"Method not allowed"});return}
@@ -112,4 +145,4 @@ if(process.argv[1]&&fileURLToPath(import.meta.url)===resolve(process.argv[1])){
    "Website Factory: http://127.0.0.1:"+port+"/website-factory/ | AI "+(cfg.enabled?"configured":"OFF")));
  }catch(error){console.error("AI bridge configuration error:",error.message);process.exitCode=1}
 }
-export {createFactoryServer,configFromEnv,askProvider,SYSTEM_PROMPT};
+export {createFactoryServer,configFromEnv,askProvider,readLimitedProviderBody,SYSTEM_PROMPT};
