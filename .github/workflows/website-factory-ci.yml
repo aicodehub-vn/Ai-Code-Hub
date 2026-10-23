@@ -55,6 +55,8 @@ jobs:
         run: |
           node --check website-factory/engine.mjs
           node --check website-factory/app.mjs
+          node --check website-factory/layout.mjs
+          node --check website-factory/layout-editor.mjs
           node --check website-factory/pipeline.mjs
           node --check website-factory/factory-cli.mjs
           node --check website-factory/tests/engine.test.mjs
