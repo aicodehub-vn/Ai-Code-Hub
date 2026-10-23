@@ -21,7 +21,7 @@ function validateHtml(html){
   ["headings",(text.match(/<h1\b/gi)||[]).length===1,"Có đúng một H1"],
   ["landmarks",targetIds.has("main")&&targetIds.has("services")&&targetIds.has("about")&&targetIds.has("contact"),"Có các section bắt buộc"],
   ["anchorLinks",fragmentLinks.length>0&&fragmentLinks.every(id=>targetIds.has(id)),"Các liên kết nội bộ có đích"],
-  ["standalone",/<style>[\s\S]*<\/style>/.test(text)&&!/<script\b|<link\b[^>]*rel="stylesheet"|https?:\/\//i.test(text),"Mã độc lập, không tải JS/CSS/CDN bên ngoài"],
+  ["standalone",/<style>[\s\S]*<\/style>/.test(text)&&!/<script\b|<link\b[^>]*rel="stylesheet"|<(?:img|iframe|source)\b[^>]*\bsrc\s*=|@import\s|url\(\s*[\x27"]?https?:/i.test(text),"Mã độc lập, không tải JS/CSS/CDN bên ngoài"],
   ["responsive",/@media\s*\(\s*max-width/i.test(text)&&/prefers-reduced-motion/i.test(text),"Có responsive và reduced motion"],
   ["safeStyle",(text.match(/<style>/gi)||[]).length===1&&(text.match(/<\/style>/gi)||[]).length===1,"Một style block duy nhất"]
  ];
