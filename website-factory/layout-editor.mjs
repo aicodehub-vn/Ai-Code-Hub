@@ -1,6 +1,6 @@
 import {BASE_SECTIONS,TYPES,MAX_IMAGES,normalizeLayout,normalizeAssets,moveSection,withoutSection,safeDataUrl} from "./layout.mjs";
 const BASE_NAMES={services:"Dịch vụ",about:"Giới thiệu",contact:"Liên hệ"};
-const TYPE_NAMES={statement:"Statement",quote:"Trích dẫn",gallery:"Gallery"};
+const TYPE_NAMES={statement:"Statement",quote:"Trích dẫn",gallery:"Gallery",faq:"FAQ",pricing:"Bảng giá",team:"Đội ngũ"};
 function newId(prefix){return prefix+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8)}
 function make(tag,className="",text=""){
  const el=document.createElement(tag);
@@ -51,7 +51,7 @@ function initLayoutStudio({onChange,notify}){
   const el=make(multiline?"textarea":"input","layout-input");
   if(!multiline)el.type="text";
   el.id=id;el.value=block[field];el.dataset.blockId=block.id;el.dataset.blockField=field;
-  el.maxLength=field==="body"?450:160;
+  el.maxLength=field==="body"?(["faq","pricing","team"].includes(block.type)?800:450):160;
   if(multiline)el.rows=2;
   parent.append(label,el);
  }
@@ -76,7 +76,7 @@ function initLayoutStudio({onChange,notify}){
    if(block){
     const fields=make("div","layout-fields");
     addTextField(fields,block,"title","TIÊU ĐỀ");
-    addTextField(fields,block,"body","MÔ TẢ / TRÍCH DẪN",true);
+    addTextField(fields,block,"body",["faq","pricing","team"].includes(block.type)?"MỖI DÒNG: TÊN | NỘI DUNG":"MÔ TẢ / TRÍCH DẪN",true);
     if(block.type==="gallery"){
      const lab=make("label","layout-field-label","HÌNH ẢNH GALLERY");
      const select=make("select","layout-input");select.dataset.blockId=block.id;select.dataset.blockField="assetId";
@@ -122,7 +122,12 @@ function initLayoutStudio({onChange,notify}){
   if(layoutSpec.blocks.length>=8)return;
   const type=TYPES.includes(typeSelect.value)?typeSelect.value:"statement";
   const id=newId("extra-");
-  const block={id,type,title:type==="gallery"?"Bộ sưu tập":type==="quote"?"Lời chứng thực":"Một ý tưởng mới",body:"Chỉnh sửa nội dung của section này.",assetId:""};
+  const defaults={
+   faq:["Câu hỏi thường gặp","Website này dành cho ai? | Dành cho người cần giới thiệu dự án.\nCó chỉnh sửa được không? | Có, bạn có thể thay mọi nội dung."],
+   pricing:["Gói dịch vụ","Cơ bản | Liên hệ báo giá\nNâng cao | Liên hệ báo giá\nChuyên nghiệp | Tư vấn riêng"],
+   team:["Gặp gỡ đội ngũ","Thành viên A | Sáng tạo\nThành viên B | Phát triển"]
+  };
+  const block={id,type,title:defaults[type]?.[0]||(type==="gallery"?"Bộ sưu tập":type==="quote"?"Lời chứng thực":"Một ý tưởng mới"),body:defaults[type]?.[1]||"Chỉnh sửa nội dung của section này.",assetId:""};
   layoutSpec=normalizeLayout({blocks:[...layoutSpec.blocks,block],order:[...layoutSpec.order,id]});
   renderSections();emit("Đã thêm "+TYPE_NAMES[type]);
  });
