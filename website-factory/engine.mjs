@@ -18,17 +18,44 @@ function normalize(raw={}){
   const theme=Object.hasOwn(THEMES,raw.theme)?raw.theme:"nocturne";
   const preset=PRESETS[category], name=clean(raw.name,70)||"Atelier Siro";
   const mail=clean(raw.email,120);
+  const brief=clean(raw.brief,450)||preset.lead;
   return {category,theme,name,headline:clean(raw.headline,130)||preset.headline,
-    brief:clean(raw.brief,450)||preset.lead,layout:raw.layout==="centered"?"centered":"split",
+    brief,layout:raw.layout==="centered"?"centered":"split",
     accent:/^#[0-9a-fA-F]{6}$/.test(raw.accent||"")?raw.accent:"",
-    email:/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(mail)?mail:""};
+    email:/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(mail)?mail:"",
+    content:normalizedContent(raw.content,category,brief)};
+}
+const EDIT_FIELDS=["sectionTitle","sectionIntro","aboutTitle","aboutText","contactTitle","contactText","ctaLabel"];
+function contentDefaults(category,brief){
+ const p=PRESETS[category];
+ return {
+  sectionTitle:"Trải nghiệm có chủ đích.",
+  sectionIntro:"Những hạng mục tiêu biểu. Bạn có thể thay bằng dịch vụ, sản phẩm hoặc dự án thực tế.",
+  aboutTitle:"Tinh giản trong tư duy. Tinh tế trong thực hiện.",
+  aboutText:brief||p.lead,
+  contactTitle:"Điều thú vị tiếp theo bắt đầu ở đây.",
+  contactText:"Cùng biến ý tưởng thành hiện thực.",
+  ctaLabel:"Khám phá ngay",
+  services:p.services.map((title,i)=>({title,description:p.descs[i]}))
+ };
+}
+function normalizedContent(raw,category,brief){
+ const defaults=contentDefaults(category,brief);
+ const source=raw&&typeof raw==="object"&&!Array.isArray(raw)?raw:{};
+ const output={};
+ for(const key of EDIT_FIELDS)output[key]=clean(source[key],key==="sectionIntro"||key==="aboutText"?450:160)||defaults[key];
+ output.services=defaults.services.map((item,i)=>({
+  title:clean(source.services?.[i]?.title,90)||item.title,
+  description:clean(source.services?.[i]?.description,250)||item.description
+ }));
+ return output;
 }
 function slug(v){
   return String(v||"website").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,55)||"website";
 }
 function renderSite(input={}){
  const c=normalize(input),p=PRESETS[c.category],t=THEMES[c.theme],accent=c.accent||t.accent;
- const cards=p.services.map((name,i)=>`<article class="tile"><small>0${i+1} / FOCUS</small><h3>${esc(name)}</h3><p>${esc(p.descs[i])}</p><span class="arrow">↗</span></article>`).join("");
+ const cards=c.content.services.map((service,i)=>`<article class="tile"><small>0${i+1} / FOCUS</small><h3>${esc(service.title)}</h3><p>${esc(service.description)}</p><span class="arrow">↗</span></article>`).join("");
  const contact=c.email?`mailto:${esc(c.email)}`:"#contact";
  const styles=String.raw`
  :root{color-scheme:dark;--bg:BG;--card:CARD;--line:LINE;--ink:INK;--muted:MUTED;--accent:ACCENT;--contrast:CONTRAST}
@@ -44,12 +71,12 @@ function renderSite(input={}){
  const body=`<a class="skip" href="#main">Bỏ qua điều hướng</a>
  <header id="top"><div class="wrap header-inner"><a class="brand" href="#top" aria-label="${esc(c.name)}"><b>✳</b>${esc(c.name)}</a><nav aria-label="Điều hướng chính"><a href="#services">Khám phá</a><a href="#about">Giới thiệu</a><a href="#contact">Liên hệ</a></nav><a class="nav-cta" href="#contact">Bắt đầu ↗</a></div></header>
  <main id="main">
- <section class="hero wrap ${c.layout}"><div class="hero-copy"><div class="eyebrow">${esc(p.kicker)}</div><h1>${esc(c.headline)}</h1><p class="lead">${esc(c.brief)}</p><div class="actions"><a class="primary" href="#services">Khám phá ngay <span>↗</span></a><a class="secondary" href="#about">Tìm hiểu thêm →</a></div></div><div class="art" aria-hidden="true"><div class="orbit"></div><div class="orbit two"></div><div class="core">✳</div><small><span>CREATED WITH PURPOSE</span><span>001 — ∞</span></small></div></section>
- <section class="services" id="services"><div class="wrap"><div class="section-heading"><div><div class="label">01 — WHAT WE DO</div><h2>Trải nghiệm có<br><em>chủ đích.</em></h2></div><p>Những hạng mục tiêu biểu. Bạn có thể thay bằng dịch vụ, sản phẩm hoặc dự án thực tế.</p></div><div class="tiles">${cards}</div></div></section>
- <section class="about wrap" id="about"><div class="label">02 — OUR STORY</div><div class="about-grid"><h2>Tinh giản trong tư duy.<br><em>Tinh tế trong thực hiện.</em></h2><div><p>${esc(c.brief)}</p><p class="note">Nội dung mẫu do Website Factory tạo từ brief; hãy rà soát và tùy chỉnh trước khi xuất bản.</p></div></div></section>
- <section class="contact" id="contact"><div class="wrap contact-inner"><div><div class="label">03 — LET'S CONNECT</div><h2>Điều thú vị tiếp theo<br><em>bắt đầu ở đây.</em></h2><p>Cùng biến ý tưởng thành hiện thực.</p></div><div><a class="contact-link" href="${contact}">${c.email?"Gửi email":"Liên hệ"} <span>↗</span></a><p class="contact-hint">${c.email?esc(c.email):"Chưa cấu hình email. Hãy bổ sung địa chỉ liên hệ trong Website Factory."}</p></div></div></section>
+ <section class="hero wrap ${c.layout}"><div class="hero-copy"><div class="eyebrow">${esc(p.kicker)}</div><h1>${esc(c.headline)}</h1><p class="lead">${esc(c.brief)}</p><div class="actions"><a class="primary" href="#services">${esc(c.content.ctaLabel)} <span>↗</span></a><a class="secondary" href="#about">Tìm hiểu thêm →</a></div></div><div class="art" aria-hidden="true"><div class="orbit"></div><div class="orbit two"></div><div class="core">✳</div><small><span>CREATED WITH PURPOSE</span><span>001 — ∞</span></small></div></section>
+ <section class="services" id="services"><div class="wrap"><div class="section-heading"><div><div class="label">01 — WHAT WE DO</div><h2>${esc(c.content.sectionTitle)}</h2></div><p>${esc(c.content.sectionIntro)}</p></div><div class="tiles">${cards}</div></div></section>
+ <section class="about wrap" id="about"><div class="label">02 — OUR STORY</div><div class="about-grid"><h2>${esc(c.content.aboutTitle)}</h2><div><p>${esc(c.content.aboutText)}</p><p class="note">Nội dung mẫu do Website Factory tạo từ brief; hãy rà soát và tùy chỉnh trước khi xuất bản.</p></div></div></section>
+ <section class="contact" id="contact"><div class="wrap contact-inner"><div><div class="label">03 — LET'S CONNECT</div><h2>${esc(c.content.contactTitle)}</h2><p>${esc(c.content.contactText)}</p></div><div><a class="contact-link" href="${contact}">${c.email?"Gửi email":"Liên hệ"} <span>↗</span></a><p class="contact-hint">${c.email?esc(c.email):"Chưa cấu hình email. Hãy bổ sung địa chỉ liên hệ trong Website Factory."}</p></div></div></section>
  </main><footer><div class="wrap footer-inner"><span>© ${new Date().getFullYear()} ${esc(c.name)}</span><span>Made with Website Factory</span><a href="#top">Lên đầu trang ↑</a></div></footer>`;
  return `<!doctype html>\n<html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="${esc(c.brief.slice(0,160))}"><meta name="theme-color" content="${t.bg}"><title>${esc(c.name)} — ${esc(c.headline)}</title><style>${styles}</style></head><body>${body}</body></html>`;
 }
 
-export {PRESETS,THEMES,normalize,renderSite,slug};
+export {PRESETS,THEMES,EDIT_FIELDS,contentDefaults,normalizedContent,normalize,renderSite,slug};
