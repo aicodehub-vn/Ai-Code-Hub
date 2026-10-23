@@ -1,13 +1,15 @@
-# WEBSITE FACTORY — v0.3 · Local-first Production Workspace
+# WEBSITE FACTORY — v0.4 · Local-first Production Workspace
 
-Website Factory là nhà máy tạo website tĩnh từ brief, **không tốn tiền AI/API**. V0.3 vận hành bằng 7 công đoạn có QA gate thật. Không mô phỏng đây là các AI Agent tự chủ: toàn bộ là **deterministic workers**, có thể thay thế bằng LLM adapter có xác thực trong bản sau.
+Website Factory là nhà máy tạo website tĩnh từ brief, **không tốn tiền AI/API**. V0.4 vận hành bằng 7 công đoạn có QA gate thật. Không mô phỏng đây là các AI Agent tự chủ: toàn bộ là **deterministic workers**, có thể thay thế bằng LLM adapter có xác thực trong bản sau.
 
 ## Đã có
 - Tạo website đơn trang từ 4 mẫu ngành: Agency / Restaurant / SaaS / Portfolio.
 - 4 palette, màu nhấn HEX, 2 layout, xem trước desktop/mobile trong iframe sandbox.
 - Content Editor: thay tiêu đề section, giới thiệu, contact, CTA và 3 card dịch vụ; live preview.
-- **Section Builder**: thêm tối đa 8 block mới (statement, quote, gallery), xóa block tùy biến, kéo thả hoặc dùng phím lên/xuống để sắp xếp tất cả section. Section nền tảng luôn giữ để liên kết điều hướng hoạt động.
+- **Section Builder**: thêm tối đa 8 block mới (statement, quote, gallery, FAQ, pricing, team), xóa block tùy biến, kéo thả hoặc dùng phím lên/xuống để sắp xếp tất cả section. Section nền tảng luôn giữ để liên kết điều hướng hoạt động.
 - **Asset Library**: tải PNG/JPEG/WebP từ máy, xử lý trên canvas để nhúng vào HTML dạng data URL; tối đa 5 ảnh, file nguồn <= 2 MB, chiều ảnh tối đa 40 MP khi giải mã. Chọn ảnh cho Hero hoặc Gallery, chỉnh alt text, xóa ảnh không dùng.
+- **Motion Controls**: Off / Subtle / Expressive (CSS-only, ưu tiên prefers-reduced-motion, không cần JS trong website xuất).
+- **Multi-page ZIP**: có thể chọn tối đa 3 trang phụ about.html, services.html, contact.html. Menu trang chính tự liên kết các trang có tạo; trang phụ chứa nội dung riêng và có đường về trang chủ. ZIP dùng phương pháp STORE (không nén thêm) và bộ tạo CRC32 nội bộ, không có dependency.
 - **Tương thích cũ**: các dự án JSON v0.1/v0.2 không có layoutSpec hoặc assets vẫn mở được. Backup giữ thứ tự section và ảnh nhúng, dung lượng tối đa 1.8 MB.
 - Agent Workspace: Brief → Design → Content → Build → QA → Repair → Export; xem trạng thái và lý do từng công đoạn.
 - QA Gate 10 quy tắc: HTML5, lang, viewport, SEO description, H1, landmarks, internal anchors, standalone resources, responsive/reduced-motion, style block.
@@ -26,7 +28,7 @@ Sau đó mở `http://localhost:8000/website-factory/`. **Không khuyến nghị
 1. Điền Creative Brief và chọn category/palette/layout.
 2. Mở **Visual Content Editor** để chỉnh chữ, sau đó **Section Builder** để thêm, xóa hoặc thay vị trí các block. Mở **Asset Library** để thêm ảnh cục bộ cho Hero/Gallery. Nội dung được escape; không nhận raw HTML.
 3. Theo dõi Live Preview và **Agent Workspace**. Nhấn **Chạy kiểm định** để xem QA. Chọn từng node để đọc chi tiết.
-4. Xuất HTML hoặc Backup JSON (kèm ảnh nếu có). Export chỉ mở khi QA vượt kiểm tra.
+4. Chọn các trang phụ trong **Multi-page Export**, đặt animation trong Creative Brief. Xuất **HTML** một trang hoặc **Website ZIP** gồm các trang đã chọn; Backup JSON chứa cấu hình và ảnh. Export chặn khi QA không đạt.
 5. Xuất bản thủ công bằng static hosting bạn chọn; công cụ không tự đăng hoặc tạo tên miền.
 
 ## Production từ GitHub Actions
@@ -59,15 +61,25 @@ Tệp đầu ra được ghi vào `website-factory/dist/`. `--config` nhận c�
 - `engine.mjs`: theme renderer và schema content.
 - `layout.mjs`: chuẩn hóa thứ tự, section và hình nhúng an toàn.
 - `layout-editor.mjs`: thao tác kéo thả, điều hướng phím và asset library.
+- `styles-extra.mjs`: CSS cho FAQ, Pricing, Team và animation.
+- `site-bundle.mjs`: tạo trang HTML phụ riêng, kiểm tra liên kết.
+- `zip.mjs`: ZIP STORE/CRC32 UTF-8 không thư viện ngoài.
 - `app.mjs`, `index.html`, `studio.css`: UI, editor, project library, responsive graph.
 - `pipeline.mjs`: 7 workers, QA, repair và export gate.
 - `factory-cli.mjs`: CLI dành cho GitHub Actions.
 - `tests/`: kiểm thử regression và security.
 - `.github/workflows/website-factory-ci.yml`: CI và artifact producer.
 
-Toàn bộ V0.3 nằm trong `website-factory/` và một workflow CI; không sửa website gốc của Ai-Code-Hub.
+Toàn bộ V0.4 nằm trong `website-factory/` và một workflow CI; không sửa website gốc của Ai-Code-Hub.
 ## Lưu ý dành cho bản V0.3
 - Ảnh nằm trực tiếp trong HTML và file backup, nên kích thước file tăng. Không dùng hình riêng tư nếu bạn định đưa HTML ra internet.
 - HTML chỉ cho phép data URL PNG/JPEG/WebP, không cho tài nguyên ngoài dạng srcset/CSS URL. Trình kiểm tra QA không thay thế kiểm toán bảo mật độc lập.
 - Kéo thả dùng HTML Drag and Drop trên desktop; điện thoại có nút ↑ ↓ để thao tác chính xác.
 - Phần UI chưa có kiểm thử E2E bằng trình duyệt thật. CI xác nhận syntax, unit/integration test và artifact generator; cần smoke test trước khi merge.
+
+## V0.4 — Lưu ý về nhiều trang
+- `index.html` luôn có toàn bộ các section, nên cũng hoạt động độc lập. Chỉ chọn các trang phụ nếu muốn có trang giới thiệu, dịch vụ và liên hệ riêng. Mỗi HTML đều có CSS nội tuyến, không phụ thuộc đường dẫn CSS bên ngoài.
+- ZIP chỉ chứa HTML, không nén bằng thuật toán Deflate. Nếu có ảnh data URL, kích thước ZIP có thể đáng kể; có thể dùng static hosting thông thường để giải nén và đăng.
+- FAQ dùng mỗi dòng `Câu hỏi | Trả lời`. Pricing dùng `Tên gói | Giá / mô tả`. Team dùng `Tên | Vai trò`. Tối đa 6 mục (Pricing 3 mục), dữ liệu được escape HTML.
+- Job GitHub Actions kiểm tra zip độc lập qua Python `zipfile`, kiểm tra cú pháp JS và unit test, sau đó tạo artifact. Để Actions sinh nhiều trang từ cấu hình, gọi CLI với `--config path/to/backup.factory.json`; workflow mặc định chỉ sinh một trang theo inputs hiện có.
+- V0.4 vẫn không có LLM tự lập trình, CMS, trình duyệt E2E, hosting hay tự động publish. Không lưu khóa bí mật trong website hoặc input workflow.
