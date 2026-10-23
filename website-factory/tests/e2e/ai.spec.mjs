@@ -70,6 +70,26 @@ test("model output with dangerous fields is rejected without changing the site",
  await expect(page.locator("#headline")).toHaveValue(old);
  await expect(page.locator("#qa-score")).toContainText("PASS");
 });
+test("HTTP 429 quota feedback preserves draft and clears consent",async({page})=>{
+ await page.route("**/api/ai/status",route=>route.fulfill({json:{enabled:true,mode:"configured"}}));
+ await page.route("**/api/ai/suggest",route=>route.fulfill({
+  status:429,headers:{"retry-after":"3"},
+  json:{error:"AI request quota reached.",retryAfterSeconds:3}
+ }));
+ await page.goto("./");
+ await expect(page.locator("#qa-score")).toContainText("PASS");
+ await page.locator("#ai-workspace").evaluate(el=>el.open=true);
+ const headline=await page.locator("#headline").inputValue();
+ await page.locator("#ai-consent").check();
+ await page.locator("#ai-request").click();
+ await expect(page.locator("#ai-state")).toContainText("giới hạn yêu cầu");
+ await expect(page.locator("#ai-state")).toContainText("3 giây");
+ await expect(page.locator("#ai-review")).toBeHidden();
+ await expect(page.locator("#ai-consent")).not.toBeChecked();
+ await expect(page.locator("#headline")).toHaveValue(headline);
+ await expect(page.locator("#qa-score")).toContainText("PASS");
+});
+
 test("full browser-to-local-AI-bridge roundtrip requires explicit consent",async({page})=>{
  let sent=null,calls=0;
  const server=createFactoryServer({
