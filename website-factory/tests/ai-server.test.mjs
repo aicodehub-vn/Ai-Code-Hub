@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createFactoryServer,configFromEnv,askProvider} from "../ai-server.mjs";
+import {createFactoryServer,configFromEnv,askProvider,readLimitedProviderBody} from "../ai-server.mjs";
+import {createRequestGate} from "../ai-policy.mjs";
 import {validateProposal} from "../ai-contract.mjs";
 import {readFile} from "node:fs/promises";
 const expected=validateProposal({
@@ -79,4 +80,79 @@ test("OpenAI-compatible fetch honors response schema and does not echo provider 
  assert.equal(reply.headline,expected.headline);
  assert.equal(auth,"Bearer server-only-test-token");
  await assert.rejects(()=>askProvider({},cfg,async()=>new Response("invalid",{status:500})));
+});
+
+
+test("V0.8 environment rejects invalid quota and supports provider JSON mode fallback",()=>{
+ assert.equal(configFromEnv({}).maxRequests,6);
+ assert.equal(configFromEnv({}).jsonMode,true);
+ assert.equal(configFromEnv({FACTORY_AI_JSON_MODE:"0",FACTORY_AI_MAX_REQUESTS:"3"}).jsonMode,false);
+ for(const config of [{FACTORY_AI_MAX_REQUESTS:"0"},{FACTORY_AI_MAX_REQUESTS:"61"},
+  {FACTORY_AI_MAX_REQUESTS:"abc"},{FACTORY_AI_JSON_MODE:"on"}])
+  assert.throws(()=>configFromEnv(config));
+});
+test("V0.8 JSON mode can be omitted for older local chat-completions providers",async()=>{
+ let request=null;
+ const cfg={url:"http://127.0.0.1:1234/chat",model:"local",key:"",jsonMode:false};
+ const value=await askProvider({brief:"Example"},cfg,async(url,options)=>{
+  request=JSON.parse(options.body);
+  return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify(expected)}}]}));
+ });
+ assert.equal(value.headline,expected.headline);
+ assert.equal(Object.hasOwn(request,"response_format"),false);
+});
+test("V0.8 stream limiter rejects untrusted oversized model output",async()=>{
+ const tooLarge=new Response("x".repeat(21000));
+ await assert.rejects(()=>readLimitedProviderBody(tooLarge),/exceeds limit/);
+ const streaming=new ReadableStream({start(c){c.enqueue(new TextEncoder().encode("x".repeat(20001)));c.close()}});
+ await assert.rejects(()=>readLimitedProviderBody({body:streaming,headers:new Headers()}),/exceeds limit/);
+ const valid=new Response('{"ok":true}');
+ assert.equal(await readLimitedProviderBody(valid),'{"ok":true}');
+});
+test("V0.8 bridge returns Retry-After for quota and concurrent requests, releases on failure",async()=>{
+ let releasePending,called=0;
+ const gate=createRequestGate({maxRequests:2,windowMs:60000});
+ const cfg={enabled:true,url:"http://127.0.0.1:1234/chat",model:"test",key:""};
+ const server=createFactoryServer({config:cfg,gate,requestProvider:async()=>{
+  called++;
+  if(called===1)await new Promise(resolve=>{releasePending=resolve});
+  return expected;
+ }});
+ await new Promise((resolve,reject)=>{server.once("error",reject);server.listen(0,"127.0.0.1",resolve)});
+ const base="http://127.0.0.1:"+server.address().port;
+ const send=()=>fetch(base+"/api/ai/suggest",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({brief:{name:"Test"}})});
+ try{
+  const first=send();
+  // Wait deterministically until the first upstream request holds the gate.
+  for(let i=0;i<60&&!releasePending;i++)await new Promise(resolve=>setTimeout(resolve,5));
+  assert.equal(typeof releasePending,"function");
+  let rejected=await send();
+  assert.equal(rejected.status,429);
+  assert.equal(rejected.headers.get("retry-after"),"1");
+  assert.equal((await rejected.json()).error,"AI is processing another request.");
+  releasePending();
+  assert.equal((await first).status,200);
+  assert.equal((await send()).status,200);
+  rejected=await send();
+  assert.equal(rejected.status,429);
+  assert.equal((await rejected.json()).error,"AI request quota reached.");
+  assert.equal(called,2);
+ }finally{releasePending?.();await new Promise(resolve=>server.close(resolve))}
+});
+test("V0.8 provider failure releases request lock so next try can succeed",async()=>{
+ let count=0;
+ const cfg={enabled:true,url:"http://127.0.0.1:1234/chat",model:"test",key:"",maxRequests:4};
+ const server=createFactoryServer({config:cfg,requestProvider:()=>{
+  count++;
+  if(count===1)throw new Error("provider secrets must never leak!");
+  return expected;
+ }});
+ await new Promise((resolve,reject)=>{server.once("error",reject);server.listen(0,"127.0.0.1",resolve)});
+ const base="http://127.0.0.1:"+server.address().port;
+ const send=()=>fetch(base+"/api/ai/suggest",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({brief:{name:"Test"}})});
+ try{
+  const a=await send();assert.equal(a.status,502);
+  assert.equal((await a.text()).includes("provider secrets"),false);
+  const b=await send();assert.equal(b.status,200);
+ }finally{await new Promise(resolve=>server.close(resolve))}
 });
