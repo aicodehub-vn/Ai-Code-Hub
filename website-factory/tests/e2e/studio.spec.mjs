@@ -3,7 +3,7 @@ import {readFile} from "node:fs/promises";
 
 const TINY_PNG="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+l0XQAAAAASUVORK5CYII=";
 async function ready(page){
-  await page.goto("/");
+  await page.goto("./");
   await expect(page.locator("#qa-score")).toContainText("PASS");
   await expect(page.frameLocator("#preview-frame").locator("#main")).toBeVisible();
 }
