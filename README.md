@@ -24,7 +24,7 @@ Chạy trên máy (Node.js 22+):
 node website-factory/factory-autopilot.mjs
 ```
 
-Xem kết quả trong `website-factory/autopilot-dist/`. **Tạo website và xuất gói sau trigger là tự động**. Đăng gói ra GitHub Releases chỉ khi bật `publish_release=true` trong lượt `workflow_dispatch` trên `main`; **không tự động bật GitHub Pages hoặc đưa website lên domain**. Để sử dụng AI thật phải cấu hình endpoint/model và cấp quyền gọi riêng; pipeline vẫn hoạt động hoàn chỉnh với mẫu offline.
+Xem kết quả trong `website-factory/autopilot-dist/`. **Tạo website và xuất gói sau trigger là tự động.** Public GitHub Release cần bật `publish_release=true` trên `main`. GitHub Pages có thể tự cập nhật website tại `/factory-site/` sau QA nếu bật `deploy_pages=true` trên workflow hoặc cấu hình repository variable `FACTORY_PUBLISH_PAGES=1` (và thiết lập Pages Source = GitHub Actions). Không tự bật Pages, chỉnh DNS hoặc đưa website lên domain riêng. Để sử dụng AI thật phải cấu hình endpoint/model và cấp quyền gọi riêng; pipeline vẫn hoạt động hoàn chỉnh với mẫu offline.
 
 **[Xem workflow và các lần chạy](https://github.com/aicodehub-vn/Ai-Code-Hub/actions/workflows/website-factory-autopilot.yml)** · **[Hướng dẫn Autopilot đầy đủ](website-factory/README.md#autopilot--dây-chuyền-tự-động)**
 
