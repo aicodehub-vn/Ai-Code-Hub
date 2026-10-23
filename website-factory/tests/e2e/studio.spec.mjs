@@ -1,5 +1,5 @@
 import {test,expect} from "@playwright/test";
-import {readFile} from "node:fs/promises";
+import {readFile,mkdir} from "node:fs/promises";
 
 const TINY_PNG="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+l0XQAAAAASUVORK5CYII=";
 async function ready(page){
@@ -129,6 +129,7 @@ test("Undo and redo restore entire site state without losing export eligibility"
 });
 
 test("Desktop/mobile screenshots are captured without horizontal page overflow",async({page})=>{
+  await mkdir("playwright-snapshots",{recursive:true});
   await page.setViewportSize({width:1366,height:850});
   await ready(page);
   await page.screenshot({path:"playwright-snapshots/studio-desktop.png",fullPage:true});
