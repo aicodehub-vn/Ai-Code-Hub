@@ -1,6 +1,8 @@
 import {normalize,THEMES,slug,contentDefaults,EDIT_FIELDS} from "./engine.mjs";
 import {initLayoutStudio} from "./layout-editor.mjs";
 import {STATIONS,runPipeline} from "./pipeline.mjs";
+import {buildSiteFiles,verifySiteFiles} from "./site-bundle.mjs";
+import {createZip} from "./zip.mjs";
 
 const KEY="website-factory.projects.v1";
 const MAX_BACKUP_BYTES=1800000;
@@ -79,6 +81,7 @@ function renderGraph(result){
  document.getElementById("qa-warning").textContent=result.warnings.join(" ");
  document.getElementById("export-html").disabled=!result.ok;
  document.getElementById("copy-html").disabled=!result.ok;
+ document.getElementById("export-zip").disabled=!result.ok;
 }
 function schedulePreview(message){
  clearTimeout(inputTimer);
@@ -95,7 +98,8 @@ function writeStorage(){
 }
 function fill(config){
  const c=normalize(config);
- for(const key of ["name","category","headline","brief","theme","layout","email"]){const el=form.elements.namedItem(key);if(el)el.value=c[key]||""}
+ for(const key of ["name","category","headline","brief","theme","layout","email","motion"]){const el=form.elements.namedItem(key);if(el)el.value=c[key]||""}
+ document.querySelectorAll("[data-page]").forEach(input=>{input.checked=c.extraPages.includes(input.dataset.page)});
  customAccent=Boolean(c.accent);
  form.elements.namedItem("accent").value=c.accent||THEMES[c.theme].accent;
  fillEditor(c.content);
@@ -104,7 +108,8 @@ function fill(config){
 function values(){
  const f=new FormData(form);
  const data={};
- for(const key of ["name","category","headline","brief","theme","layout","email"])data[key]=String(f.get(key)||"");
+ for(const key of ["name","category","headline","brief","theme","layout","email","motion"])data[key]=String(f.get(key)||"");
+ data.extraPages=[...document.querySelectorAll("[data-page]:checked")].map(x=>x.dataset.page);
  data.accent=customAccent?String(f.get("accent")||""):"";
  data.content=editorValues();
  Object.assign(data,layoutStudio.get());
@@ -166,6 +171,23 @@ function download(){
  setTimeout(()=>URL.revokeObjectURL(url),1000);
  notify("Đã xuất HTML. Hãy kiểm tra nội dung trước khi xuất bản.");
 }
+function downloadZip(){
+ clearTimeout(inputTimer);
+ const data=values();
+ const main=runPipeline(data);
+ if(!main.ok){renderGraph(main);notify("QA chặn xuất ZIP do website chính chưa đạt.");return}
+ try{
+  const bundle=buildSiteFiles(main.config);
+  const report=verifySiteFiles(bundle.files);
+  if(!report.ok){notify("QA chặn ZIP: "+report.issues.map(x=>x.file+"/"+x.code).join(", "));return}
+  const zip=createZip(bundle.files);
+  const url=URL.createObjectURL(new Blob([zip],{type:"application/zip"}));
+  const a=document.createElement("a");a.href=url;a.download=slug(data.name)+"-site.zip";
+  document.body.append(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  notify("Đã xuất ZIP gồm "+Object.keys(bundle.files).length+" trang HTML độc lập (STORE).");
+ }catch(error){notify("Không thể xuất ZIP: "+(error instanceof Error?error.message:"Lỗi đóng gói"))}
+}
 function backupJson(){
  clearTimeout(inputTimer);
  const config=values();
@@ -211,6 +233,7 @@ async function copy(){
 form.addEventListener("submit",event=>{event.preventDefault();if(!form.reportValidity())return;preview("Website đã được tạo theo cấu hình hiện tại")});
 form.addEventListener("input",()=>schedulePreview("Preview tự cập nhật"));
 editor.addEventListener("input",()=>schedulePreview("Nội dung đã cập nhật"));
+document.getElementById("pages-options").addEventListener("change",()=>schedulePreview("Đã thay đổi danh sách trang phụ"));
 form.elements.namedItem("category").addEventListener("change",()=>{
  const normalized=values();
  fillEditor(contentDefaults(normalized.category,normalized.brief));
@@ -245,6 +268,7 @@ document.querySelectorAll("[data-device]").forEach(button=>button.addEventListen
 document.getElementById("save-project").addEventListener("click",saveProject);
 document.getElementById("new-project").addEventListener("click",newProject);
 document.getElementById("export-html").addEventListener("click",download);
+document.getElementById("export-zip").addEventListener("click",downloadZip);
 document.getElementById("copy-html").addEventListener("click",copy);
 document.getElementById("export-json").addEventListener("click",backupJson);
 document.getElementById("import-json-button").addEventListener("click",()=>document.getElementById("import-json-file").click());
