@@ -67,6 +67,9 @@ jobs:
           node --check website-factory/engine.mjs
           node --check website-factory/app.mjs
           node --check website-factory/history.mjs
+          node --check website-factory/ai-contract.mjs
+          node --check website-factory/ai-ui.mjs
+          node --check website-factory/ai-server.mjs
           node --check website-factory/layout.mjs
           node --check website-factory/layout-editor.mjs
           node --check website-factory/site-bundle.mjs
