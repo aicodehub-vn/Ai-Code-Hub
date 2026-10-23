@@ -6,7 +6,7 @@ Nhà máy tạo website local-first. Chạy bằng HTML/CSS/JavaScript thuần, 
 - 4 loại website: creative agency, restaurant, SaaS, portfolio.
 - 4 bảng màu, tùy chọn màu HEX, 2 bố cục hero.
 - Preview desktop/mobile trong iframe sandbox, không cấp quyền script.
-- Lưu 25 dự án trong localStorage trình duyệt.
+- Lưu 25 dự án trong localStorage trình duyệt; backup và import cấu hình qua JSON.
 - Xuất HTML tự chứa CSS, copy toàn bộ mã nguồn.
 - Responsive layout, nội dung tiếng Việt, chế độ reduced motion.
 - Kiểm thử Node.js và GitHub Actions.
@@ -35,7 +35,7 @@ node --test website-factory/tests/*.test.mjs
 - Cần rà soát nội dung mẫu trước khi đưa lên production. Chưa hỗ trợ CMS, database, website nhiều trang, assets, domain, tự publish hay AI API.
 
 ## Roadmap
-v0.2: visual section editor + xuất/nhập JSON + ZIP đa tệp.
+v0.2: visual section editor + ZIP đa tệp và asset manager.
 v0.3: image library có kiểm soát bản quyền + chuyển động + SEO/a11y QA.
 v0.4: AI adapter qua backend/local model + schema validation + human review (không để secret ở frontend).
 v0.5: GitHub App/OAuth publish với quyền tối thiểu và yêu cầu xác nhận.
