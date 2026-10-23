@@ -18,6 +18,8 @@ function envConfig(){
   brief:process.env.FACTORY_BRIEF||"",
   theme:process.env.FACTORY_THEME||"nocturne",
   layout:process.env.FACTORY_LAYOUT||"split",
+  motion:process.env.FACTORY_MOTION||"subtle",
+  extraPages:(process.env.FACTORY_PAGES||"").split(",").map(value=>value.trim()).filter(Boolean),
   email:""
  };
 }
