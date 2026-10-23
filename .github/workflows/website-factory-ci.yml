@@ -57,6 +57,9 @@ jobs:
           node --check website-factory/app.mjs
           node --check website-factory/layout.mjs
           node --check website-factory/layout-editor.mjs
+          node --check website-factory/site-bundle.mjs
+          node --check website-factory/styles-extra.mjs
+          node --check website-factory/zip.mjs
           node --check website-factory/pipeline.mjs
           node --check website-factory/factory-cli.mjs
           node --check website-factory/tests/engine.test.mjs
