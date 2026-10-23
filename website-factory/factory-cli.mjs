@@ -7,6 +7,7 @@ import {readFile,writeFile,mkdir} from "node:fs/promises";
 import {fileURLToPath} from "node:url";
 import {join,dirname,resolve} from "node:path";
 import {runPipeline} from "./pipeline.mjs";
+import {buildSiteFiles,verifySiteFiles} from "./site-bundle.mjs";
 const root=dirname(fileURLToPath(import.meta.url));
 const dist=join(root,"dist");
 function envConfig(){
