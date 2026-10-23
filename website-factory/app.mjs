@@ -1,7 +1,9 @@
-import {normalize,THEMES,renderSite,slug,contentDefaults,EDIT_FIELDS} from "./engine.mjs";
+import {normalize,THEMES,slug,contentDefaults,EDIT_FIELDS} from "./engine.mjs";
+import {initLayoutStudio} from "./layout-editor.mjs";
 import {STATIONS,runPipeline} from "./pipeline.mjs";
 
 const KEY="website-factory.projects.v1";
+const MAX_BACKUP_BYTES=1800000;
 const form=document.getElementById("builder-form");
 const frame=document.getElementById("preview-frame");
 const stage=document.getElementById("preview-stage");
@@ -97,6 +99,7 @@ function fill(config){
  customAccent=Boolean(c.accent);
  form.elements.namedItem("accent").value=c.accent||THEMES[c.theme].accent;
  fillEditor(c.content);
+ layoutStudio.set(c);
 }
 function values(){
  const f=new FormData(form);
@@ -104,6 +107,7 @@ function values(){
  for(const key of ["name","category","headline","brief","theme","layout","email"])data[key]=String(f.get(key)||"");
  data.accent=customAccent?String(f.get("accent")||""):"";
  data.content=editorValues();
+ Object.assign(data,layoutStudio.get());
  return normalize(data);
 }
 function preview(message="Bản xem trước đã cập nhật"){
@@ -142,6 +146,7 @@ function saveProject(){
  const entry={id,config,updatedAt:new Date().toISOString()};
  projects=[entry,...projects.filter(p=>p.id!==id)].slice(0,25);
  if(writeStorage()){activeId=id;renderList();notify("Đã lưu dự án trên trình duyệt này")}
+ else projects=projects.filter(p=>p.id!==id);
 }
 function newProject(){
  activeId=null;
@@ -176,7 +181,7 @@ async function importJson(event){
  const file=event.target.files?.[0];
  event.target.value="";
  if(!file)return;
- if(file.size>100000){notify("Tệp JSON vượt giới hạn 100 KB");return}
+ if(file.size>MAX_BACKUP_BYTES){notify("Tệp JSON quá lớn (giới hạn 1,8 MB)");return}
  try{
   const raw=JSON.parse(await file.text());
   if(!raw||typeof raw!=="object"||Array.isArray(raw))throw new Error("Định dạng tệp không hợp lệ");
@@ -244,6 +249,7 @@ document.getElementById("export-json").addEventListener("click",backupJson);
 document.getElementById("import-json-button").addEventListener("click",()=>document.getElementById("import-json-file").click());
 document.getElementById("import-json-file").addEventListener("change",importJson);
 makeServiceFields();
+const layoutStudio=initLayoutStudio({onChange:message=>schedulePreview(message),notify});
 projects=readStorage();
 if(projects.length){activeId=projects[0].id;fill(projects[0].config)}
 else fill({name:"Atelier Siro",brief:"Một studio thiết kế trải nghiệm số, nơi nghệ thuật và công nghệ gặp nhau.",theme:"nocturne"});
